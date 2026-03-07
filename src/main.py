@@ -148,41 +148,73 @@ class ChessRobot:
         rect[3] = pts[np.argmax(diff)]  # BL
         return rect
     
-    def _get_square_occupancy(self, gray): # AI highly improved my function here
-        """Occupancy for wooden black/white pieces [web:22][web:44]"""
+    def _get_square_occupancy(self, gray):
+        self.frame = gray
         corners = self._find_board_corners(gray)
         if corners is None:
             return {}
-        
-        dst_size = 400
+
+        dst_size = 480
         dst_pts = np.float32([[0, 0], [dst_size, 0], [dst_size, dst_size], [0, dst_size]])
         matrix = cv2.getPerspectiveTransform(corners, dst_pts)
         warped = cv2.warpPerspective(gray, matrix, (dst_size, dst_size))
-        
-        occupancy = {}
-        square_size = dst_size // 8
-        
+
+        trim = int(dst_size * 0.04)
+        inner = warped[trim:dst_size - trim, trim:dst_size - trim]
+        inner_size = inner.shape[0]
+        square_size = inner_size // 8
+
+        # ✅ Compute edges once for the whole board
+        edges = cv2.Canny(inner, 30, 90)
+
+        brightness = np.zeros((8, 8))
+        std_map = np.zeros((8, 8))
+        edge_map = np.zeros((8, 8))
+
         for rank in range(8):
             for file in range(8):
-                y, x = rank * square_size, file * square_size
-                sq = warped[y:y+square_size, x:x+square_size]
-                
-                # adaptive thresh + contour algo for wood texture
-                blur = cv2.GaussianBlur(sq, (7, 7), 0)
-                thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
-                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                
-                area_ratio = 0
-                if contours:
-                    largest = max(contours, key=cv2.contourArea)
-                    area_ratio = cv2.contourArea(largest) / (square_size ** 2)
-                
-                sq_idx = chess.square(file, 7 - rank)  # a8=0, h1=63
-                occupancy[sq_idx] = area_ratio > 0.12  # tune this for the actual board!!
+                x = file * square_size
+                y = rank * square_size
+                margin = square_size // 4
+                patch = inner[y+margin:y+square_size-margin, x+margin:x+square_size-margin]
+                edge_patch = edges[y+margin:y+square_size-margin, x+margin:x+square_size-margin]
 
-        cv2.imshow('warped', warped)
-        cv2.imshow('thresh_example', thresh)  # Last square
-        if cv2.waitKey(1) & 0xFF == ord('q'): exit()
+                brightness[rank, file] = np.mean(patch)
+                std_map[rank, file] = np.std(patch)
+                edge_map[rank, file] = np.sum(edge_patch > 0) / edge_patch.size
+
+        light_mean = np.mean([brightness[r, f] for r in range(8) for f in range(8) if (r + f) % 2 == 0])
+        dark_mean = np.mean([brightness[r, f] for r in range(8) for f in range(8) if (r + f) % 2 == 1])
+
+        # ✅ DYNAMIC PERCENTILE THRESHOLDS (adapts to any board/lighting)
+        edge_75th = np.percentile(edge_map, 75)
+        edge_90th = np.percentile(edge_map, 90)
+        std_75th = np.percentile(std_map, 75)
+
+        print(f"Dynamic: light={light_mean:.1f} dark={dark_mean:.1f} e75={edge_75th:.3f} e90={edge_90th:.3f} s75={std_75th:.0f}")
+
+        occupancy = {}
+        for rank in range(8):
+            for file in range(8):
+                sq_idx = (7 - rank) * 8 + file
+                b = brightness[rank, file]
+                std = std_map[rank, file]
+                edge = edge_map[rank, file]
+                is_light_square = (rank + file) % 2 == 0
+
+                if is_light_square:
+                    # Top 25% edge OR top 25% texture
+                    edge_trigger = edge > edge_75th
+                    texture_trigger = std > std_75th
+                    occupancy[sq_idx] = edge_trigger or texture_trigger
+                else:
+                    # Top 10% edge OR significant brightness deviation
+                    edge_trigger = edge > edge_90th
+                    brightness_trigger = abs(b - dark_mean) > 0.12 * dark_mean
+                    occupancy[sq_idx] = edge_trigger or brightness_trigger
+
+        self._draw_occupancy_overlay(inner, occupancy, std_map, brightness, edge_map, square_size)
+        cv2.imwrite('../img/processed/warped_board.png', inner)
         return occupancy
     
     def _infer_move(self, old_occ, new_occ):
@@ -277,6 +309,35 @@ class ChessRobot:
         self.gripper.release()                    # drop
         self.robot_arm.retract_to_base()
         """
+
+    def _draw_occupancy_overlay(self, inner, occupancy, std_map, brightness, edge_map, square_size):
+        overlay = cv2.cvtColor(inner, cv2.COLOR_GRAY2BGR)
+
+        for rank in range(8):
+            for file in range(8):
+                sq_idx = (7 - rank) * 8 + file
+                x = file * square_size
+                y = rank * square_size
+                cx = x + square_size // 2
+                cy = y + square_size // 2
+
+                if occupancy.get(sq_idx, False):
+                    cv2.circle(overlay, (cx, cy), square_size // 3, (0, 255, 0), 2)
+                else:
+                    cv2.circle(overlay, (cx, cy), 4, (0, 0, 255), -1)
+
+                sq_name = chess.square_name(sq_idx)
+                cv2.putText(overlay, sq_name, (x + 2, y + 11), cv2.FONT_HERSHEY_PLAIN, 0.7, (255, 255, 0), 1)
+
+                # Debug metrics
+                cv2.putText(overlay, f"b:{brightness[rank,file]:.0f}", (x+2, y+square_size-20), cv2.FONT_HERSHEY_PLAIN, 0.55, (200,200,200), 1)
+                cv2.putText(overlay, f"s:{std_map[rank,file]:.0f}",    (x+2, y+square_size-11), cv2.FONT_HERSHEY_PLAIN, 0.55, (200,200,200), 1)
+                cv2.putText(overlay, f"e:{edge_map[rank,file]:.2f}",   (x+2, y+square_size-2),  cv2.FONT_HERSHEY_PLAIN, 0.55, (200,200,200), 1)
+
+        cv2.imwrite('../img/processed/occupancy_overlay.png', overlay)
+        print("Saved occupancy_overlay.png")
+
+
 def main():
     # stockfish https://stockfishchess.org/download/
     try:
