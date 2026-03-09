@@ -1,9 +1,13 @@
+import os
 import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
 import chess
 import cv2
 from main import ChessRobot
+
+# In order to operat unittesting please ensure you execute the following line, unless already downloaded
+# pip install numpy opencv-python python-chess
 
 
 class TestChessRobot(unittest.TestCase):
