@@ -47,7 +47,6 @@ class ChessRobot:
         self.motion_history = deque(maxlen=10) # not needed to have more than 10, we still need to save memory
         self.stable_threshold = 5
         self.last_occupancy = None
-        
     def _detect_motion(self, gray):
         """Returns True if LOW motion (stable)"""
         if len(self.motion_history) < 2:
@@ -58,7 +57,7 @@ class ChessRobot:
         diff = cv2.absdiff(gray, prev)
         _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
         motion_ratio = np.sum(thresh > 0) / (gray.shape[0] * gray.shape[1])
-        
+
         self.motion_history.append(gray.copy())
         return motion_ratio < 0.015  # stable if <1.5% changem can be and should be changed prob
     

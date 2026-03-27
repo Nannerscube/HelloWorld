@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chess Robot</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: #111;
+    color: #ddd;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 12px;
+}
+
+h1 { color: #00979d; font-size: 16px; margin-bottom: 12px; letter-spacing: 1px; }
+h3 { font-size: 12px; color: #00979d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+.layout {
+    display: grid;
+    grid-template-columns: 300px 300px 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    align-items: start;
+}
+
+.panel {
+    background: #1a1a1a;
+    border: 1px solid #00979d44;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+/* ── Camera column ── */
+#panel-camera { grid-column: 1; grid-row: 1 / 3; }
+
+/* ── Board column ── */
+#panel-board { grid-column: 2; grid-row: 1 / 3; }
+
+/* ── Controls top ── */
+#panel-controls { grid-column: 3; grid-row: 1; }
+
+/* ── Debug bottom ── */
+#panel-debug { grid-column: 3; grid-row: 2; }
+
+img.feed {
+    width: 280px;
+    height: 210px;
+    background: #222;
+    display: block;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+img.snapshot {
+    width: 280px;
+    height: 280px;
+    background: #222;
+    display: block;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+/* Buttons */
+.btn {
+    background: #00979d;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 3px 2px;
+    transition: background 0.15s;
+}
+.btn:hover    { background: #007a7e; }
+.btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+.btn.warn     { background: #7a5500; }
+.btn.warn:hover { background: #9d6e00; }
+.btn.danger   { background: #7a2000; }
+.btn.danger:hover { background: #9d2b00; }
+.btn.sm       { padding: 4px 10px; font-size: 11px; }
+
+.btn-row { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 6px; }
+
+/* Status line */
+.status-line {
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: #222;
+    border-left: 3px solid #555;
+    font-size: 11px;
+    min-height: 28px;
+    word-break: break-word;
+    margin-bottom: 6px;
+    transition: border-color 0.2s;
+}
+.status-line.ok     { border-color: #00cc66; color: #00cc66; }
+.status-line.warn   { border-color: #ffaa00; color: #ffaa00; }
+.status-line.err    { border-color: #ff4444; color: #ff4444; }
+.status-line.info   { border-color: #00979d; color: #aaa; }
+
+/* FEN bar */
+#fen-bar {
+    background: #111;
+    border: 1px dashed #00979d55;
+    border-radius: 4px;
+    padding: 5px 7px;
+    font-size: 10px;
+    color: #00cc66;
+    word-break: break-all;
+    margin-bottom: 6px;
+}
+
+/* Turn indicator */
+#turn-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+#turn-dot {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid #777;
+    background: #eee;
+    flex-shrink: 0;
+    transition: background 0.25s, border-color 0.25s;
+}
+#turn-dot.black { background: #111; border-color: #999; }
+#turn-label { font-size: 12px; color: #bbb; }
+
+/* Manual calibration form */
+#manual-form {
+    display: none;
+    margin-top: 8px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 8px;
+}
+#manual-form.open { display: block; }
+.corner-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+    margin-bottom: 6px;
+}
+.corner-grid label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
+.corner-grid input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 3px;
+    color: #ddd;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 3px 6px;
+}
+.corner-grid .pair { display: flex; gap: 4px; }
+.corner-grid .pair input { width: 50%; }
+
+/* Debug output */
+#debug-out {
+    background: #0d0d0d;
+    border: 1px solid #222;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 10px;
+    color: #aaa;
+    max-height: 420px;
+    overflow-y: auto;
+    white-space: pre;
+    display: none;
+}
+#debug-out.open { display: block; }
+
+.debug-section { color: #00979d; margin-top: 6px; margin-bottom: 2px; }
+.debug-grid { font-family: monospace; line-height: 1.5; }
+.debug-grid .hl  { color: #ff4444; }
+.debug-grid .ok  { color: #00cc66; }
+.debug-grid .dim { color: #555; }
+
+/* Verify image */
+#verify-img {
+    width: 280px;
+    height: 280px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+    display: none;
+    margin-top: 6px;
+}
+#verify-img.open { display: block; }
+
+/* Stability badge */
+#stability-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #222;
+    color: #888;
+    margin-left: 6px;
+}
+
+/* Board SVG */
+#board-svg { display: block; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<h1>⬛ Chess Robot</h1>
+
+<div class="layout">
+
+    <!-- ═══════════════════════════════ CAMERA ═══════════════════ -->
+    <div class="panel" id="panel-camera">
+        <h3>Camera</h3>
+        <img class="feed" id="live-feed" src="" alt="live">
+
+        <div class="btn-row">
+            <button class="btn" onclick="calibrateAuto()">Auto Calibrate</button>
+            <button class="btn warn sm" onclick="toggleManual()">Manual…</button>
+        </div>
+
+        <div id="manual-form">
+            <p style="font-size:10px;color:#888;margin-bottom:6px;">
+                Preview is 320×240 — multiply clicked coords ×2 for 640×480 camera.
+            </p>
+            <div class="corner-grid">
+                <div>
+                    <label>TL (a8 corner)</label>
+                    <div class="pair">
+                        <input type="number" id="tl_x" placeholder="x" value="90">
+                        <input type="number" id="tl_y" placeholder="y" value="60">
+                    </div>
+                </div>
+                <div>
+                    <label>TR (h8 corner)</label>
+                    <div class="pair">
+                        <input type="number" id="tr_x" placeholder="x" value="1180">
+                        <input type="number" id="tr_y" placeholder="y" value="56">
+                    </div>
+                </div>
+                <div>
+                    <label>BR (h1 corner)</label>
+                    <div class="pair">
+                        <input type="number" id="br_x" placeholder="x" value="1190">
+                        <input type="number" id="br_y" placeholder="y" value="910">
+                    </div>
+                </div>
+                <div>
+                    <label>BL (a1 corner)</label>
+                    <div class="pair">
+                        <input type="number" id="bl_x" placeholder="x" value="84">
+                        <input type="number" id="bl_y" placeholder="y" value="916">
+                    </div>
+                </div>
+            </div>
+            <button class="btn sm" onclick="calibrateManual()">Set Corners</button>
+        </div>
+
+        <div class="btn-row" style="margin-top:6px;">
+            <button class="btn warn sm" onclick="verifyRaw()">Verify Raw</button>
+            <button class="btn warn sm" onclick="verifyOrientation()">Verify Board</button>
+        </div>
+
+        <div id="status-calib" class="status-line info">Ready.</div>
+
+        <img id="verify-img" class="open" src="" alt="verify" style="width:280px;height:auto;display:none;">
+    </div>
+
+    <!-- ═══════════════════════════════ BOARD ════════════════════ -->
+    <div class="panel" id="panel-board">
+        <h3>Live Board</h3>
+        <div id="turn-row">
+            <div id="turn-dot"></div>
+            <span id="turn-label">White to move</span>
+            <span id="stability-badge">—</span>
+        </div>
+        <!-- 20px left gutter + 8×34=272px + 18px bottom gutter = 292×290 -->
+        <svg id="board-svg" width="292" height="290" viewBox="0 0 292 290"></svg>
+        <div id="fen-bar">FEN: —</div>
+    </div>
+
+    <!-- ═══════════════════════════════ CONTROLS ═════════════════ -->
+    <div class="panel" id="panel-controls">
+        <h3>Capture</h3>
+
+        <div class="btn-row">
+            <button class="btn" id="btn-capture" onclick="doCapture()">📸 Capture / Analyze</button>
+            <button class="btn danger sm" onclick="doReset()">↺ Reset Game</button>
+        </div>
+
+        <div id="status-capture" class="status-line info">Press Capture to seed reference frame, then capture after each move.</div>
+
+        <img class="snapshot" id="snap-img" src="" alt="snapshot" style="display:none;">
+
+        <div style="font-size:10px;color:#555;margin-top:4px;">
+            First press seeds reference. Subsequent presses detect the move made since last press.
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════ DEBUG ════════════════════ -->
+    <div class="panel" id="panel-debug">
+        <h3>Debug</h3>
+        <div class="btn-row">
+            <button class="btn warn sm" onclick="doDebug()">Run /debug</button>
+            <button class="btn sm" onclick="toggleDebugOut()">Toggle Output</button>
+        </div>
+        <div id="status-debug" class="status-line info">Call /debug after seeding + before capturing a move.</div>
+        <div id="debug-out"></div>
+    </div>
+
+</div><!-- end layout -->
+
+<script>
+// ─────────────────────────────────────────
+// Board renderer
+// ─────────────────────────────────────────
+const PIECES  = { K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙', k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟' };
+const LIGHT   = '#f0d9b5';
+const DARK    = '#b58863';
+const SQ      = 34;
+const GL      = 18;   // left gutter
+const GB      = 18;   // bottom gutter
+const FILES   = ['a','b','c','d','e','f','g','h'];
+
+function svgEl(tag, attrs, text) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+    if (text !== undefined) el.textContent = text;
+    return el;
+}
+
+function renderFEN(fen) {
+    const svg  = document.getElementById('board-svg');
+    svg.innerHTML = '';
+    const rows = fen.split(' ')[0].split('/');
+    const board = rows.map(row => {
+        const cells = [];
+        for (const ch of row) {
+            if (/\d/.test(ch)) for (let i = 0; i < +ch; i++) cells.push(null);
+            else cells.push(ch);
+        }
+        return cells;
+    });
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const x = GL + c*SQ, y = r*SQ;
+            const light = (r+c)%2===0;
+            svg.appendChild(svgEl('rect', { x, y, width:SQ, height:SQ, fill: light?LIGHT:DARK }));
+            // square name
+            svg.appendChild(svgEl('text', {
+                x: x+2, y: y+SQ-2,
+                'text-anchor':'start','font-size':'6','font-family':'monospace',
+                fill: light?DARK:LIGHT, opacity:'0.75'
+            }, FILES[c]+(8-r)));
+            // piece
+            const piece = board[r]?.[c];
+            if (piece) {
+                const white = piece===piece.toUpperCase();
+                svg.appendChild(svgEl('text', {
+                    x: x+SQ/2, y: y+SQ/2+1,
+                    'text-anchor':'middle','dominant-baseline':'central',
+                    'font-size':'22',
+                    fill: white?'#fff':'#111',
+                    stroke: white?'#444':'#bbb',
+                    'stroke-width':'0.5','paint-order':'stroke'
+                }, PIECES[piece]||''));
+            }
+        }
+    }
+    // rank labels
+    for (let r=0;r<8;r++) {
+        svg.appendChild(svgEl('text',{
+            x:GL-3, y:r*SQ+SQ/2,
+            'text-anchor':'end','dominant-baseline':'central',
+            'font-size':'10','font-family':'sans-serif',fill:'#777'
+        }, String(8-r)));
+    }
+    // file labels
+    for (let c=0;c<8;c++) {
+        svg.appendChild(svgEl('text',{
+            x: GL+c*SQ+SQ/2, y: 8*SQ+GB-4,
+            'text-anchor':'middle','dominant-baseline':'central',
+            'font-size':'10','font-family':'sans-serif',fill:'#777'
+        }, FILES[c]));
+    }
+}
+
+function setTurn(turn) {
+    const dot = document.getElementById('turn-dot');
+    document.getElementById('turn-label').textContent = turn==='black'?'Black to move':'White to move';
+    dot.classList.toggle('black', turn==='black');
+}
+
+function updateFen(fen) {
+    if (!fen) return;
+    document.getElementById('fen-bar').textContent = 'FEN: '+fen;
+    renderFEN(fen);
+    // derive turn from FEN second field
+    const t = fen.split(' ')[1];
+    if (t) setTurn(t==='b'?'black':'white');
+}
+
+function setStatus(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'status-line '+(type||'info');
+}
+
+function setStability(pct) {
+    const b = document.getElementById('stability-badge');
+    if (pct === null || pct === undefined) { b.textContent = '—'; b.style.color='#555'; return; }
+    b.textContent = `σ ${pct}%`;
+    b.style.color = pct > 2.5 ? '#ffaa00' : '#00cc66';
+}
+
+// ─────────────────────────────────────────
+// Live stream
+// ─────────────────────────────────────────
+setInterval(async () => {
+    try {
+        const d = await (await fetch('/stream')).json();
+        if (d?.image) document.getElementById('live-feed').src = d.image;
+    } catch(e) {}
+}, 320);
+
+// ─────────────────────────────────────────
+// Calibration
+// ─────────────────────────────────────────
+async function calibrateAuto() {
+    setStatus('status-calib', 'Searching for chessboard corners…', 'info');
+    try {
+        const d = await (await fetch('/calibrate')).json();
+        setStatus('status-calib', d.message, d.status==='success'?'ok':'err');
+    } catch(e) { setStatus('status-calib','Request failed','err'); }
+}
+
+function toggleManual() {
+    document.getElementById('manual-form').classList.toggle('open');
+}
+
+async function calibrateManual() {
+    const get = id => document.getElementById(id).value;
+    const url = `/calibrate_manual?tl_x=${get('tl_x')}&tl_y=${get('tl_y')}`
+              + `&tr_x=${get('tr_x')}&tr_y=${get('tr_y')}`
+              + `&br_x=${get('br_x')}&br_y=${get('br_y')}`
+              + `&bl_x=${get('bl_x')}&bl_y=${get('bl_y')}`;
+    setStatus('status-calib','Setting manual corners…','info');
+    try {
+        const d = await (await fetch(url)).json();
+        setStatus('status-calib', d.message, d.status==='success'?'ok':'err');
+    } catch(e) { setStatus('status-calib','Request failed','err'); }
+}
+
+async function verifyRaw() {
+    setStatus('status-calib','Fetching raw corner overlay…','info');
+    try {
+        const d = await (await fetch('/verify_raw')).json();
+        setStatus('status-calib', d.note || d.message, d.status==='ok'?'ok':'err');
+        const img = document.getElementById('verify-img');
+        if (d.image) { img.src = d.image; img.style.display='block'; }
+    } catch(e) { setStatus('status-calib','Request failed','err'); }
+}
+
+async function verifyOrientation() {
+    setStatus('status-calib','Fetching orientation overlay…','info');
+    try {
+        const d = await (await fetch('/verify')).json();
+        setStatus('status-calib', d.note || d.message, d.status==='ok'?'ok':'err');
+        const img = document.getElementById('verify-img');
+        if (d.image) { img.src = d.image; img.style.display='block'; }
+    } catch(e) { setStatus('status-calib','Request failed','err'); }
+}
+
+// ─────────────────────────────────────────
+// Capture
+// ─────────────────────────────────────────
+async function doCapture() {
+    const btn = document.getElementById('btn-capture');
+    btn.disabled = true;
+    setStatus('status-capture','Capturing…','info');
+    try {
+        const d = await (await fetch('/capture')).json();
+
+        const colorMap = { success:'ok', ready:'ok', unstable:'warn', fail:'err' };
+        setStatus('status-capture', d.message || 'Done', colorMap[d.status] || 'info');
+        setStability(d.stability_score);
+        if (d.fen) updateFen(d.fen);
+        if (d.image) {
+            const img = document.getElementById('snap-img');
+            img.src = d.image;
+            img.style.display = 'block';
+        }
+    } catch(e) { setStatus('status-capture','Request failed','err'); }
+    btn.disabled = false;
+}
+
+// ─────────────────────────────────────────
+// Reset (resets python-chess board server-side via /reset if available,
+//        or falls back to just re-rendering starting FEN locally)
+// ─────────────────────────────────────────
+async function doReset() {
+    if (!confirm('Reset game to starting position?')) return;
+    setStatus('status-capture','Resetting…','info');
+    try {
+        const d = await (await fetch('/reset')).json();
+        setStatus('status-capture', d.message, d.status==='success'?'ok':'err');
+        if (d.fen) updateFen(d.fen);
+    } catch(e) {
+        // /reset not in this backend — reset board display locally only
+        const startFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1';
+        updateFen(startFEN);
+        document.getElementById('fen-bar').textContent = 'FEN: '+startFEN+' (local reset only — recalibrate recommended)';
+        setStatus('status-capture','Board display reset. Re-calibrate to re-seed reference.','warn');
+    }
+}
+
+// ─────────────────────────────────────────
+// Debug
+// ─────────────────────────────────────────
+function toggleDebugOut() {
+    document.getElementById('debug-out').classList.toggle('open');
+}
+
+async function doDebug() {
+    setStatus('status-debug','Running /debug…','info');
+    const out = document.getElementById('debug-out');
+    out.classList.add('open');
+    out.innerHTML = 'Loading…';
+    try {
+        const d = await (await fetch('/debug')).json();
+        if (d.status === 'fail') {
+            setStatus('status-debug', d.message, 'err');
+            out.innerHTML = d.message;
+            return;
+        }
+
+        setStatus('status-debug',
+            `Changed: [${(d.changed_squares||[]).join(', ')||'none'}]  threshold=${d.threshold}`, 'ok');
+
+        // Render top 5 candidates
+        let html = '';
+        html += '<span class="debug-section">▸ Top 5 candidates</span>\n';
+        (d.top5_candidates||[]).forEach((c,i) => {
+            const hi = i===0?'ok':'dim';
+            html += `  <span class="${hi}">${c.move.padEnd(8)} ${c.score}</span>\n`;
+        });
+
+        // Grid renderer
+        const renderGrid = (title, rows, colorFn) => {
+            html += `\n<span class="debug-section">▸ ${title}</span>\n`;
+            rows.forEach(row => {
+                html += '  ';
+                row.forEach(cell => {
+                    const cls = colorFn ? colorFn(cell) : '';
+                    html += cls ? `<span class="${cls}">${String(cell).padStart(5)}</span>` : String(cell).padStart(5);
+                });
+                html += '\n';
+            });
+        };
+
+        renderGrid('Ratio grid (diff per square)', d.ratio_grid, v => {
+            const n = parseFloat(v);
+            if (n > 0.4) return 'hl';
+            if (n > 0.1) return 'warn';
+            return 'dim';
+        });
+
+        renderGrid('Changed grid (X=changed)', d.changed_grid, v => v==='X'?'hl':'dim');
+        renderGrid('Known pieces', d.known_grid, v => v==='.'?'dim':'ok');
+        renderGrid('Computed occ', d.computed_grid, null);
+        renderGrid('Mismatch (!)', d.mismatch_grid, v => v==='!'?'hl':'dim');
+
+        out.innerHTML = html;
+    } catch(e) { setStatus('status-debug','Request failed','err'); out.textContent = e.toString(); }
+}
+
+// ─────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────
+renderFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
+setTurn('white');
+</script>
+</body>
+</html>
