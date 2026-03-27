@@ -1,5 +1,5 @@
 // NEMA 17 + DRV8825 on Arduino CNC Shield — X, Y, Z axes + SG90 servo
-// Servo on pin 12
+// Servo on pin 12 via raw PWM (no Servo library)
 // Chess arm: X+Z move together (column), Y moves independently (row)
 
 #define ENABLE_PIN 8
@@ -22,7 +22,14 @@
 #define GRIPPER_CLOSED  2000
 #define GRIPPER_OPEN    1000
 
-// ─── Servo (raw PWM) ────────────────────────────────────────────────────────
+// ─── Position tracking ───────────────────────────────────────────────────────
+// Tracks how many steps each axis is away from home (0 = home).
+// XZ share one counter since they always move together.
+
+int posXZ = 0;   // steps from home along the XZ axis
+int posY  = 0;   // steps from home along the Y axis
+
+// ─── Servo (raw PWM) ─────────────────────────────────────────────────────────
 
 void setGripper(unsigned int pulse) {
   for (unsigned char i = 0; i < 8; i++) {
@@ -47,11 +54,12 @@ void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
 }
 
 // ─── X + Z simultaneous ──────────────────────────────────────────────────────
-// X always counterclockwise (LOW), Z always clockwise (HIGH)
+// forward=true  → X counterclockwise, Z clockwise   (away from home)
+// forward=false → X clockwise,        Z counterclockwise (toward home)
 
-void stepMotorXZ(int steps) {
-  digitalWrite(X_DIR, LOW);   // X counterclockwise
-  digitalWrite(Z_DIR, HIGH);  // Z clockwise
+void stepMotorXZ(int steps, bool forward) {
+  digitalWrite(X_DIR, forward ? LOW  : HIGH);  // X: CCW=away, CW=return
+  digitalWrite(Z_DIR, forward ? HIGH : LOW);   // Z: CW=away, CCW=return
   delay(1);
   for (int i = 0; i < steps * MICROSTEP; i++) {
     digitalWrite(X_STEP, HIGH);
@@ -61,12 +69,32 @@ void stepMotorXZ(int steps) {
     digitalWrite(Z_STEP, LOW);
     delayMicroseconds(STEP_DELAY_US);
   }
+
+  // Update position counter
+  posXZ += forward ? steps : -steps;
+}
+
+// ─── Home position ───────────────────────────────────────────────────────────
+// Reverses both axes by exactly the number of steps taken since last home.
+
+void goHome() {
+  // Return Y first, then XZ — reverse of the outward move order
+  if (posY != 0) {
+    bool returnDir = (posY > 0) ? false : true;   // reverse whatever direction moved
+    stepMotor(Y_DIR, Y_STEP, abs(posY), returnDir);
+    posY = 0;
+    delay(200);
+  }
+
+  if (posXZ != 0) {
+    bool returnForward = (posXZ < 0);             // if posXZ is negative, go forward to return
+    stepMotorXZ(abs(posXZ), returnForward);
+    // posXZ is reset inside stepMotorXZ via the counter
+    delay(200);
+  }
 }
 
 // ─── Chess position lookup ────────────────────────────────────────────────────
-// Fill in the step counts below for every square on your physical board.
-// columSteps  → fed to stepMotorXZ()   (X+Z together, sets arm angle/reach)
-// rowSteps    → fed to stepMotor Y     (sets arm height / forward extension)
 
 int getColumnSteps(char col) {
   switch (col) {
@@ -97,15 +125,24 @@ int getRowSteps(int row) {
 }
 
 // ─── Move arm to a chess square ──────────────────────────────────────────────
+// Always homes first so every move starts from a known position.
 
 void goToChessSquare(char col, int row) {
+  goHome();                                              // return to origin first
+
   int colSteps = getColumnSteps(col);
   int rowSteps = getRowSteps(row);
 
-  stepMotorXZ(colSteps);          // X + Z together → column position
-  delay(200);
-  stepMotor(Y_DIR, Y_STEP, rowSteps, true);  // Y → row position
-  delay(200);
+  if (colSteps > 0) {
+    stepMotorXZ(colSteps, true);                         // XZ → column position
+    delay(200);
+  }
+
+  if (rowSteps > 0) {
+    stepMotor(Y_DIR, Y_STEP, rowSteps, true);            // Y → row position
+    posY += rowSteps;
+    delay(200);
+  }
 }
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
@@ -119,6 +156,10 @@ void setup() {
 
   // Keep motors permanently enabled so they hold position/weight
   digitalWrite(ENABLE_PIN, LOW);
+
+  // Reset position trackers — assume arm starts at home on power-up
+  posXZ = 0;
+  posY  = 0;
 
   // Center gripper on startup
   setGripper(1500);
@@ -135,4 +176,7 @@ void loop() {
   goToChessSquare('D', 5);
   setGripper(GRIPPER_OPEN);
   delay(500);
+
+  goHome();   // return to home after sequence is done
+  delay(2000);
 }
