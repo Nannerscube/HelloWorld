@@ -1,3 +1,6 @@
+// NEMA 17 + DRV8825 on Arduino CNC Shield — X, Y, Z axes + SG90 servo
+// Servo on pin 12 via raw PWM (no Servo library — works on Arduino UNO Q)
+
 #define ENABLE_PIN 8
 
 #define X_DIR  5
@@ -15,13 +18,9 @@
 #define MICROSTEP     1
 #define STEP_DELAY_US 1000
 
-#define SERVO_MIN 544   // 0 degrees
-#define SERVO_MAX 2400  // 180 degrees
-
 #define GRIPPER_CLOSED 2000
 #define GRIPPER_OPEN 1000
 
-// --- Servo functions ---
 void servoWrite(int degrees) {
   int pulseUs = map(degrees, 0, 180, SERVO_MIN, SERVO_MAX);
   digitalWrite(SERVO_PIN, HIGH);
@@ -37,31 +36,17 @@ void setGripper(unsigned int pulse) {
   }
 }
 
-// --- Stepper functions ---
-void stepMotor(int stepPin) {
-  digitalWrite(stepPin, HIGH);
-  delayMicroseconds(STEP_DELAY_US);
-  digitalWrite(stepPin, LOW);
-  delayMicroseconds(STEP_DELAY_US);
-}
-
-// Move X and Z simultaneously
-void stepXZ(int steps, bool xCCW, bool zCW) {
-  digitalWrite(X_DIR, xCCW ? LOW : HIGH);  // CCW = LOW
-  digitalWrite(Z_DIR, zCW  ? HIGH : LOW);  // CW  = HIGH
-  delay(1); // allow direction to settle
-
+void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
+  digitalWrite(dirPin, clockwise ? HIGH : LOW);
+  delay(1);
   for (int i = 0; i < steps * MICROSTEP; i++) {
-    digitalWrite(X_STEP, HIGH);
-    digitalWrite(Z_STEP, HIGH);
+    digitalWrite(stepPin, HIGH);
     delayMicroseconds(STEP_DELAY_US);
-    digitalWrite(X_STEP, LOW);
-    digitalWrite(Z_STEP, LOW);
+    digitalWrite(stepPin, LOW);
     delayMicroseconds(STEP_DELAY_US);
   }
 }
 
-// --- Setup ---
 void setup() {
   pinMode(X_DIR,  OUTPUT); pinMode(X_STEP, OUTPUT);
   pinMode(Y_DIR,  OUTPUT); pinMode(Y_STEP, OUTPUT);
@@ -69,7 +54,6 @@ void setup() {
   pinMode(ENABLE_PIN, OUTPUT);
   pinMode(SERVO_PIN,  OUTPUT);
 
-  // Keep drivers enabled to hold position
   digitalWrite(ENABLE_PIN, LOW);
 
   // Center servo on startup
@@ -79,27 +63,32 @@ void setup() {
   }
 }
 
-// --- Main loop ---
 void loop() {
-  // --- Move X counterclockwise, Z clockwise to same position ---
-  stepXZ(STEPS_PER_REV, true, true);
+  // X
+  stepMotor(X_DIR, X_STEP, STEPS_PER_REV, true);
+  delay(300);
+  stepMotor(X_DIR, X_STEP, STEPS_PER_REV, false);
+  delay(300);
 
-  // Hold position for 2 seconds
-  delay(2000);
+  // Y
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, true);
+  delay(300);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(300);
 
-  // // --- Gripper open ---
-  // setGripper(GRIPPER_OPEN);
-  // delay(500);
+  // Z
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, true);
+  delay(300);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(300);
 
-  // // --- Gripper close ---
-  // setGripper(GRIPPER_CLOSED);
-  // delay(500);
+  // --- Gripper open ---
+  setGripper(GRIPPER_OPEN);
+  delay(500);
 
-  // --- Move back: X clockwise, Z counterclockwise ---
-  stepXZ(STEPS_PER_REV, false, false);
+  // --- Gripper close ---
+  setGripper(GRIPPER_CLOSED);
+  delay(500);
 
-  // Hold position again
-  delay(2000);
-
-  // Optional: repeat loop
+  delay(500);
 }
