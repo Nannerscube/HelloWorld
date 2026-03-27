@@ -22,12 +22,17 @@
 #define GRIPPER_CLOSED  2000
 #define GRIPPER_OPEN    1000
 
-// ─── Position tracking ───────────────────────────────────────────────────────
-// Tracks how many steps each axis is away from home (0 = home).
-// XZ share one counter since they always move together.
+// ─── Home coordinates ────────────────────────────────────────────────────────
+// Set these to the step counts that position the arm at your desired home.
+// The arm will drive to these on startup and treat them as origin (0,0).
 
-int posXZ = 0;   // steps from home along the XZ axis
-int posY  = 0;   // steps from home along the Y axis
+#define HOME_XZ   0    // TODO: set to your home XZ step position
+#define HOME_Y    0    // TODO: set to your home Y step position
+
+// ─── Position tracking ───────────────────────────────────────────────────────
+
+int posXZ = 0;
+int posY  = 0;
 
 // ─── Servo (raw PWM) ─────────────────────────────────────────────────────────
 
@@ -43,6 +48,7 @@ void setGripper(unsigned int pulse) {
 // ─── Single-axis step ────────────────────────────────────────────────────────
 
 void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
+  if (steps <= 0) return;
   digitalWrite(dirPin, clockwise ? HIGH : LOW);
   delay(1);
   for (int i = 0; i < steps * MICROSTEP; i++) {
@@ -58,8 +64,9 @@ void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
 // forward=false → X clockwise,        Z counterclockwise (toward home)
 
 void stepMotorXZ(int steps, bool forward) {
-  digitalWrite(X_DIR, forward ? LOW  : HIGH);  // X: CCW=away, CW=return
-  digitalWrite(Z_DIR, forward ? HIGH : LOW);   // Z: CW=away, CCW=return
+  if (steps <= 0) return;
+  digitalWrite(X_DIR, forward ? LOW  : HIGH);
+  digitalWrite(Z_DIR, forward ? HIGH : LOW);
   delay(1);
   for (int i = 0; i < steps * MICROSTEP; i++) {
     digitalWrite(X_STEP, HIGH);
@@ -69,29 +76,37 @@ void stepMotorXZ(int steps, bool forward) {
     digitalWrite(Z_STEP, LOW);
     delayMicroseconds(STEP_DELAY_US);
   }
-
-  // Update position counter
   posXZ += forward ? steps : -steps;
 }
 
-// ─── Home position ───────────────────────────────────────────────────────────
-// Reverses both axes by exactly the number of steps taken since last home.
+// ─── Move to absolute step position ─────────────────────────────────────────
+// Drives each axis to an exact step count from home, regardless of where
+// the arm currently is.
+
+void moveToPosition(int targetXZ, int targetY) {
+  // ── XZ axis ──
+  int deltaXZ = targetXZ - posXZ;
+  if (deltaXZ != 0) {
+    stepMotorXZ(abs(deltaXZ), deltaXZ > 0);
+  }
+
+  delay(200);
+
+  // ── Y axis ──
+  int deltaY = targetY - posY;
+  if (deltaY != 0) {
+    bool clockwise = (deltaY > 0);
+    stepMotor(Y_DIR, Y_STEP, abs(deltaY), clockwise);
+    posY += deltaY;
+  }
+
+  delay(200);
+}
+
+// ─── Go to home position ─────────────────────────────────────────────────────
 
 void goHome() {
-  // Return Y first, then XZ — reverse of the outward move order
-  if (posY != 0) {
-    bool returnDir = (posY > 0) ? false : true;   // reverse whatever direction moved
-    stepMotor(Y_DIR, Y_STEP, abs(posY), returnDir);
-    posY = 0;
-    delay(200);
-  }
-
-  if (posXZ != 0) {
-    bool returnForward = (posXZ < 0);             // if posXZ is negative, go forward to return
-    stepMotorXZ(abs(posXZ), returnForward);
-    // posXZ is reset inside stepMotorXZ via the counter
-    delay(200);
-  }
+  moveToPosition(0, 0);
 }
 
 // ─── Chess position lookup ────────────────────────────────────────────────────
@@ -125,24 +140,42 @@ int getRowSteps(int row) {
 }
 
 // ─── Move arm to a chess square ──────────────────────────────────────────────
-// Always homes first so every move starts from a known position.
 
 void goToChessSquare(char col, int row) {
-  goHome();                                              // return to origin first
+  goHome();
+  delay(300);
+  moveToPosition(getColumnSteps(col), getRowSteps(row));
+}
 
-  int colSteps = getColumnSteps(col);
-  int rowSteps = getRowSteps(row);
+// ─── Startup homing sequence ──────────────────────────────────────────────────
+// Drives the arm from its physical power-on position to HOME_XZ / HOME_Y,
+// then resets the position counters to 0 so that (0,0) = home from here on.
+//
+// HOW TO SET HOME_XZ AND HOME_Y:
+//   1. Place the arm at the furthest position it could ever start from.
+//   2. Count how many steps it takes in each axis to reach your desired home.
+//   3. Enter those counts as HOME_XZ and HOME_Y above.
+//   4. Every power-on the arm will drive those steps and stop there.
 
-  if (colSteps > 0) {
-    stepMotorXZ(colSteps, true);                         // XZ → column position
-    delay(200);
+void driveToHomeOnStartup() {
+  // Drive XZ to home
+  if (HOME_XZ > 0) {
+    stepMotorXZ(HOME_XZ, true);     // move forward to home
+  } else if (HOME_XZ < 0) {
+    stepMotorXZ(-HOME_XZ, false);   // move backward to home
   }
+  delay(300);
 
-  if (rowSteps > 0) {
-    stepMotor(Y_DIR, Y_STEP, rowSteps, true);            // Y → row position
-    posY += rowSteps;
-    delay(200);
+  // Drive Y to home
+  if (HOME_Y != 0) {
+    bool clockwise = (HOME_Y > 0);
+    stepMotor(Y_DIR, Y_STEP, abs(HOME_Y), clockwise);
   }
+  delay(300);
+
+  // Declare this as position zero — all future moves are relative to here
+  posXZ = 0;
+  posY  = 0;
 }
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
@@ -154,15 +187,15 @@ void setup() {
   pinMode(ENABLE_PIN, OUTPUT);
   pinMode(SERVO_PIN,  OUTPUT);
 
-  // Keep motors permanently enabled so they hold position/weight
+  // Motors always on — hold position and weight at all times
   digitalWrite(ENABLE_PIN, LOW);
 
-  // Reset position trackers — assume arm starts at home on power-up
-  posXZ = 0;
-  posY  = 0;
+  // Open gripper on startup
+  setGripper(GRIPPER_OPEN);
+  delay(300);
 
-  // Center gripper on startup
-  setGripper(1500);
+  // Drive to home and lock in (0,0) as origin
+  driveToHomeOnStartup();
 }
 
 // ─── Loop (example sequence) ─────────────────────────────────────────────────
@@ -177,6 +210,6 @@ void loop() {
   setGripper(GRIPPER_OPEN);
   delay(500);
 
-  goHome();   // return to home after sequence is done
+  goHome();
   delay(2000);
 }
