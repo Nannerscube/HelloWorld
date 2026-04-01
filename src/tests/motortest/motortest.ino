@@ -14,19 +14,12 @@
 
 #define SERVO_PIN 12
 
-#define STEPS_PER_REV 200
+#define STEPS_PER_REV 50
 #define MICROSTEP     1
-#define STEP_DELAY_US 1000
+#define STEP_DELAY_US 6000
 
-#define GRIPPER_CLOSED 2000
+#define GRIPPER_CLOSED 2200
 #define GRIPPER_OPEN 1000
-
-void servoWrite(int degrees) {
-  int pulseUs = map(degrees, 0, 180, SERVO_MIN, SERVO_MAX);
-  digitalWrite(SERVO_PIN, HIGH);
-  delayMicroseconds(pulseUs);
-  digitalWrite(SERVO_PIN, LOW);
-}
 
 void setGripper(unsigned int pulse) {
   for (unsigned char i = 0; i < 8; i++) {
@@ -47,6 +40,23 @@ void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
   }
 }
 
+void stepTwoMotors(int dirPin1, int stepPin1, bool dir1,
+                   int dirPin2, int stepPin2, bool dir2,
+                   int steps) {
+  digitalWrite(dirPin1, dir1 ? HIGH : LOW);
+  digitalWrite(dirPin2, dir2 ? HIGH : LOW);
+  delay(1);
+
+  for (int i = 0; i < steps * MICROSTEP; i++) {
+    digitalWrite(stepPin1, HIGH);
+    digitalWrite(stepPin2, HIGH);
+    delayMicroseconds(STEP_DELAY_US);
+    digitalWrite(stepPin1, LOW);
+    digitalWrite(stepPin2, LOW);
+    delayMicroseconds(STEP_DELAY_US);
+  }
+}
+
 void setup() {
   pinMode(X_DIR,  OUTPUT); pinMode(X_STEP, OUTPUT);
   pinMode(Y_DIR,  OUTPUT); pinMode(Y_STEP, OUTPUT);
@@ -55,40 +65,69 @@ void setup() {
   pinMode(SERVO_PIN,  OUTPUT);
 
   digitalWrite(ENABLE_PIN, LOW);
-
-  // Center servo on startup
-  for (int i = 0; i < 25; i++) {
-    servoWrite(90);
-    delay(20);
-  }
 }
 
 void loop() {
-  // X
-  stepMotor(X_DIR, X_STEP, STEPS_PER_REV, true);
-  delay(300);
-  stepMotor(X_DIR, X_STEP, STEPS_PER_REV, false);
-  delay(300);
+  // ── FORWARD SEQUENCE ──────────────────────────────────────────────
 
-  // Y
-  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, true);
-  delay(300);
-  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
-  delay(300);
-
-  // Z
-  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, true);
-  delay(300);
-  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
-  delay(300);
-
-  // --- Gripper open ---
+  // Open gripper
   setGripper(GRIPPER_OPEN);
   delay(500);
 
-  // --- Gripper close ---
+  // Move 1: Z up + Y forward
+  stepTwoMotors(Z_DIR, Z_STEP, true,
+                Y_DIR, Y_STEP, true,
+                STEPS_PER_REV);
+  delay(300);
+
+  // Move 2: X forward
+  stepMotor(X_DIR, X_STEP, STEPS_PER_REV, true);
+  delay(500);
+
+  // Move 3: X back
+  stepMotor(X_DIR, X_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  // Move 4: Z up + Y forward again
+  stepTwoMotors(Z_DIR, Z_STEP, true,
+                Y_DIR, Y_STEP, true,
+                STEPS_PER_REV);
+  delay(300);
+
+  // Move 5: Z down + Y forward (60 steps), then close gripper
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  delay(500);
   setGripper(GRIPPER_CLOSED);
   delay(500);
 
+  // ── RETURN SEQUENCE (reversed) ────────────────────────────────────
+
+  // Undo Move 5: Z up + Y back (60 steps)
+  stepTwoMotors(Z_DIR, Z_STEP, true,
+                Y_DIR, Y_STEP, false,
+                50);
+  delay(300);
+
+  // Undo Move 4: Z down + Y back
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, false,
+                STEPS_PER_REV);
+  delay(300);
+
+  // Undo Move 3: X forward (was already undone by Move 3 itself — X went forward then back)
+  // Net X displacement = 0, no undo needed
+
+  // Undo Move 1: Z down + Y back
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, false,
+                STEPS_PER_REV);
+  delay(300);
+
+  // Re-open gripper back to resting state
+  setGripper(GRIPPER_OPEN);
   delay(500);
+
+  while (true);
 }
