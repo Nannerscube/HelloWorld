@@ -26,16 +26,35 @@ CENTER_CROP = 0.5
 OTSU_MIN_THRESH = 15
 FIXED_FALLBACK_THRESH = 25
 OCC_RATIO_THRESH = 0.25
+OCC_RATIO_MIN_THRESH = 0.16
+OCC_RATIO_MAX_THRESH = 0.42
+OCC_RATIO_BASELINE = 0.18
+OCC_RATIO_NOISE_SCALE = 2.0
+OCC_RATIO_MARGIN = 0.03
 STABILITY_MAX_PCT = 2.5
 MIN_FOOTPRINT_IOU = 0.5
 MAX_CHANGED_SQUARES = 6
+MAX_CAPTURE_CHANGED_SQUARES = 8
+MOVE_SCORE_MIN = 1.35
+CAPTURE_MOVE_SCORE_MIN = 1.15
+CAPTURE_TO_RATIO_FLOOR = 0.08
+CAPTURE_SOURCE_BONUS = 0.45
+QUIET_FROM_CAPTURE_SOURCE_PENALTY = 0.5
 BOARD_ROTATION = None
+ROTATION_CANDIDATES = [
+    ("none", None),
+    ("rotate_90_cw", cv2.ROTATE_90_CLOCKWISE),
+    ("rotate_180", cv2.ROTATE_180),
+    ("rotate_90_ccw", cv2.ROTATE_90_COUNTERCLOCKWISE),
+]
+RED_AREA_MIN = 500
 
 board = chess.Board()
 engine = None
 camera = None
 locked_outer_pts = None
 last_stable_gray = None
+square_occ_thresholds = {}
 camera_status = "Camera setup not started."
 board_rotation = BOARD_ROTATION
 
@@ -57,16 +76,25 @@ def log_board_snapshot(label: str) -> None:
 
 def initialize_engine() -> bool:
     global engine
-    for candidate in ENGINE_PATH_CANDIDATES:
+
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    repo_stockfish = os.path.join(repo_root, "stockfish")
+    candidates = [repo_stockfish, *ENGINE_PATH_CANDIDATES]
+
+    for candidate in candidates:
         if not candidate:
             continue
+        exists = os.path.isfile(candidate)
+        executable = os.access(candidate, os.X_OK) if exists else False
+        print(f"[PYTHON]: Trying {candidate} | exists={exists} | executable={executable}")
         try:
             engine = chess.engine.SimpleEngine.popen_uci(candidate)
             engine.configure({"Skill Level": SKILL_LEVEL})
             print(f"[PYTHON]: Stockfish ready from {candidate}")
             debug_log(f"Engine initialized with starting board FEN: {board.fen()}")
             return True
-        except Exception:
+        except Exception as exc:
+            print(f"[PYTHON]: Failed ({candidate}): {type(exc).__name__}: {exc}")
             continue
     print("[PYTHON ERROR]: Could not initialize Stockfish from configured paths.")
     return False
@@ -158,6 +186,12 @@ def apply_warp(frame, matrix):
     return warped
 
 
+def rotate_image(img, rotation):
+    if rotation is None:
+        return img
+    return cv2.rotate(img, rotation)
+
+
 def get_square_center_roi(gray_img, row, col, crop_ratio=0.45):
     square_size = BOARD_SIZE // 8
     inset = int(square_size * (1 - crop_ratio) / 2)
@@ -168,32 +202,175 @@ def get_square_center_roi(gray_img, row, col, crop_ratio=0.45):
     return gray_img[y1:y2, x1:x2]
 
 
-def detect_starting_orientation(warped_bgr):
+def score_starting_rotation(warped_bgr):
     gray = cv2.cvtColor(warped_bgr, cv2.COLOR_BGR2GRAY)
 
     top_samples = []
     bottom_samples = []
+    middle_samples = []
+    top_texture = []
+    bottom_texture = []
+    middle_texture = []
 
     for row in [0, 1]:
         for col in range(8):
             roi = get_square_center_roi(gray, row, col)
             if roi.size:
                 top_samples.append(float(np.mean(roi)))
+                top_texture.append(float(np.std(roi)))
 
     for row in [6, 7]:
         for col in range(8):
             roi = get_square_center_roi(gray, row, col)
             if roi.size:
                 bottom_samples.append(float(np.mean(roi)))
+                bottom_texture.append(float(np.std(roi)))
+
+    for row in [2, 3, 4, 5]:
+        for col in range(8):
+            roi = get_square_center_roi(gray, row, col)
+            if roi.size:
+                middle_samples.append(float(np.mean(roi)))
+                middle_texture.append(float(np.std(roi)))
 
     top_mean = float(np.mean(top_samples)) if top_samples else 0.0
     bottom_mean = float(np.mean(bottom_samples)) if bottom_samples else 0.0
-    should_flip = top_mean > bottom_mean
+    middle_mean = float(np.mean(middle_samples)) if middle_samples else 0.0
+    top_std = float(np.mean(top_texture)) if top_texture else 0.0
+    bottom_std = float(np.mean(bottom_texture)) if bottom_texture else 0.0
+    middle_std = float(np.mean(middle_texture)) if middle_texture else 0.0
 
+    # Correct starting orientation should show dark black pieces on the top ranks,
+    # lighter white pieces on the bottom ranks, and more texture on occupied ranks
+    # than the empty middle ranks. A 90-degree rotation tends to flatten this signal.
+    vertical_contrast = bottom_mean - top_mean
+    occupied_texture = ((top_std + bottom_std) / 2.0) - middle_std
+    edge_penalty = abs(middle_mean - ((top_mean + bottom_mean) / 2.0))
+    score = vertical_contrast * 1.5 + occupied_texture - edge_penalty * 0.2
+
+    return {
+        "score": round(score, 3),
+        "top_mean": round(top_mean, 2),
+        "bottom_mean": round(bottom_mean, 2),
+        "middle_mean": round(middle_mean, 2),
+        "top_std": round(top_std, 2),
+        "bottom_std": round(bottom_std, 2),
+        "middle_std": round(middle_std, 2),
+    }
+
+
+def detect_starting_rotation(warped_bgr):
+    best_name = "none"
+    best_rotation = None
+    best_score = None
+
+    for name, rotation in ROTATION_CANDIDATES:
+        rotated = rotate_image(warped_bgr, rotation)
+        metrics = score_starting_rotation(rotated)
+        debug_log(
+            "Orientation probe "
+            f"{name}: score={metrics['score']:.3f}, "
+            f"top_mean={metrics['top_mean']:.2f}, bottom_mean={metrics['bottom_mean']:.2f}, "
+            f"top_std={metrics['top_std']:.2f}, bottom_std={metrics['bottom_std']:.2f}, "
+            f"middle_std={metrics['middle_std']:.2f}"
+        )
+        if best_score is None or metrics["score"] > best_score:
+            best_score = metrics["score"]
+            best_name = name
+            best_rotation = rotation
+
+    return best_name, best_rotation, best_score
+
+
+def rotation_name(rotation):
+    for name, candidate in ROTATION_CANDIDATES:
+        if candidate == rotation:
+            return name
+    return "unknown"
+
+
+def get_red_anchor_side(raw_bgr):
+    if raw_bgr is None or locked_outer_pts is None:
+        return None, None
+
+    hsv = cv2.cvtColor(raw_bgr, cv2.COLOR_BGR2HSV)
+    lower_red_1 = np.array([0, 70, 50], dtype=np.uint8)
+    upper_red_1 = np.array([10, 255, 255], dtype=np.uint8)
+    lower_red_2 = np.array([170, 70, 50], dtype=np.uint8)
+    upper_red_2 = np.array([180, 255, 255], dtype=np.uint8)
+
+    mask1 = cv2.inRange(hsv, lower_red_1, upper_red_1)
+    mask2 = cv2.inRange(hsv, lower_red_2, upper_red_2)
+    mask = cv2.bitwise_or(mask1, mask2)
+    kernel = np.ones((5, 5), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    best_contour = None
+    best_area = 0.0
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > best_area:
+            best_area = area
+            best_contour = contour
+
+    if best_contour is None or best_area < RED_AREA_MIN:
+        return None, None
+
+    moments = cv2.moments(best_contour)
+    if moments["m00"] == 0:
+        return None, None
+
+    cx = moments["m10"] / moments["m00"]
+    cy = moments["m01"] / moments["m00"]
+    anchor = np.array([cx, cy], dtype=np.float32)
+
+    side_midpoints = {
+        "top": (locked_outer_pts[0] + locked_outer_pts[1]) / 2.0,
+        "right": (locked_outer_pts[1] + locked_outer_pts[2]) / 2.0,
+        "bottom": (locked_outer_pts[2] + locked_outer_pts[3]) / 2.0,
+        "left": (locked_outer_pts[3] + locked_outer_pts[0]) / 2.0,
+    }
+
+    side_distances = {
+        side: float(np.linalg.norm(anchor - midpoint))
+        for side, midpoint in side_midpoints.items()
+    }
+    detected_side = min(side_distances, key=side_distances.get)
+    return detected_side, {
+        "area": round(best_area, 1),
+        "cx": round(float(cx), 1),
+        "cy": round(float(cy), 1),
+        "distances": {side: round(dist, 1) for side, dist in side_distances.items()},
+    }
+
+
+def get_rotation_for_bottom_side(side_name):
+    return {
+        "bottom": None,
+        "top": cv2.ROTATE_180,
+        "left": cv2.ROTATE_90_COUNTERCLOCKWISE,
+        "right": cv2.ROTATE_90_CLOCKWISE,
+    }.get(side_name)
+
+
+def choose_starting_rotation(raw_bgr, warped_bgr):
+    red_side, red_metrics = get_red_anchor_side(raw_bgr)
+    if red_side is not None:
+        chosen_rotation = get_rotation_for_bottom_side(red_side)
+        debug_log(
+            "Red anchor probe: "
+            f"side={red_side}, area={red_metrics['area']}, center=({red_metrics['cx']}, {red_metrics['cy']}), "
+            f"distances={red_metrics['distances']}"
+        )
+        return rotation_name(chosen_rotation), chosen_rotation, "red-anchor"
+
+    best_name, best_rotation, best_score = detect_starting_rotation(warped_bgr)
     debug_log(
-        f"Orientation probe: top_mean={top_mean:.2f}, bottom_mean={bottom_mean:.2f}, should_flip={should_flip}"
+        f"Red anchor unavailable; falling back to board heuristic rotation {best_name} (score={best_score:.3f})."
     )
-    return should_flip, top_mean, bottom_mean
+    return best_name, best_rotation, "board-heuristic"
 
 
 def capture_stable_median(matrix):
@@ -204,6 +381,7 @@ def capture_stable_median(matrix):
 
     grays = []
     last_bgr = None
+    last_raw = None
     start = time.time()
     for i in range(3):
         wait = (start + i * FRAME_DELAY) - time.time()
@@ -212,7 +390,8 @@ def capture_stable_median(matrix):
         success, frame = camera.read()
         if not success:
             debug_log("Camera read failed during stable median capture.")
-            return None, None, None
+            return None, None, None, None, None
+        last_raw = frame.copy()
         warped = apply_warp(frame, matrix)
         grays.append(cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY))
         last_bgr = warped
@@ -222,11 +401,11 @@ def capture_stable_median(matrix):
     debug_log(f"Stable median capture finished with stability={stability_pct:.2f}%")
     if stability_pct > STABILITY_MAX_PCT:
         debug_log("Stable median capture rejected as unstable.")
-        return None, last_bgr, stability_pct
+        return None, last_bgr, stability_pct, grays, last_raw
 
     median_gray = np.median(np.stack(grays, axis=0), axis=0).astype(np.uint8)
     debug_log("Stable median capture accepted.")
-    return median_gray, last_bgr, stability_pct
+    return median_gray, last_bgr, stability_pct, grays, last_raw
 
 
 def try_find_corners(gray):
@@ -262,21 +441,63 @@ def get_square_roi_bounds(row, col):
     return row * square_size + pad, (row + 1) * square_size - pad, col * square_size + pad, (col + 1) * square_size - pad
 
 
-def square_changed(diff_img, row, col):
-    y1, y2, x1, x2 = get_square_roi_bounds(row, col)
-    roi = diff_img[y1:y2, x1:x2]
-    area = (y2 - y1) * (x2 - x1)
+def measure_change_ratio(roi):
+    area = roi.shape[0] * roi.shape[1]
     if area == 0:
-        return False, 0.0
-
+        return 0.0
     kernel = np.ones((3, 3), np.uint8)
     otsu_val, thresh = cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     if otsu_val < OTSU_MIN_THRESH:
         _, thresh = cv2.threshold(roi, FIXED_FALLBACK_THRESH, 255, cv2.THRESH_BINARY)
 
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-    ratio = cv2.countNonZero(thresh) / area
-    return ratio > OCC_RATIO_THRESH, round(ratio, 3)
+    return round(cv2.countNonZero(thresh) / area, 3)
+
+
+def compute_square_thresholds(gray_frames, reference_gray):
+    thresholds = {}
+    if not gray_frames or reference_gray is None:
+        return thresholds
+
+    for row in range(8):
+        for col in range(8):
+            y1, y2, x1, x2 = get_square_roi_bounds(row, col)
+            noise_ratios = []
+            reference_roi = reference_gray[y1:y2, x1:x2]
+            for gray in gray_frames:
+                diff_roi = cv2.absdiff(gray[y1:y2, x1:x2], reference_roi)
+                noise_ratios.append(measure_change_ratio(diff_roi))
+
+            noise_peak = max(noise_ratios) if noise_ratios else 0.0
+            learned = OCC_RATIO_BASELINE + noise_peak * OCC_RATIO_NOISE_SCALE + OCC_RATIO_MARGIN
+            learned = min(max(learned, OCC_RATIO_MIN_THRESH), OCC_RATIO_MAX_THRESH)
+            thresholds[chess.square(col, 7 - row)] = round(learned, 3)
+
+    return thresholds
+
+
+def update_square_thresholds(gray_frames, reference_gray):
+    global square_occ_thresholds
+    square_occ_thresholds = compute_square_thresholds(gray_frames, reference_gray)
+    if not square_occ_thresholds:
+        debug_log("Per-square thresholds unavailable, keeping global fallback only.")
+        return
+
+    sorted_thresholds = sorted(
+        ((chess.square_name(square), threshold) for square, threshold in square_occ_thresholds.items()),
+        key=lambda item: item[1],
+        reverse=True,
+    )[:12]
+    debug_log(f"Per-square thresholds learned: {sorted_thresholds}")
+
+
+def square_changed(diff_img, row, col):
+    y1, y2, x1, x2 = get_square_roi_bounds(row, col)
+    roi = diff_img[y1:y2, x1:x2]
+    ratio = measure_change_ratio(roi)
+    chess_sq = chess.square(col, 7 - row)
+    threshold = square_occ_thresholds.get(chess_sq, OCC_RATIO_THRESH)
+    return ratio > threshold, ratio
 
 
 def get_changed_squares(diff_img):
@@ -290,6 +511,63 @@ def get_changed_squares(diff_img):
             if changed_flag:
                 changed.add(chess_sq)
     return changed, ratios
+
+
+def square_distance(square_a, square_b):
+    return max(
+        abs(chess.square_file(square_a) - chess.square_file(square_b)),
+        abs(chess.square_rank(square_a) - chess.square_rank(square_b)),
+    )
+
+
+def score_move_candidate(move, changed_squares, ratios):
+    footprint = get_move_footprint(move)
+    footprint_names = {chess.square_name(square) for square in footprint}
+    from_name = chess.square_name(move.from_square)
+    to_name = chess.square_name(move.to_square)
+    from_ratio = ratios.get(from_name, 0.0)
+    to_ratio = ratios.get(to_name, 0.0)
+
+    intersection = len(footprint & changed_squares)
+    union = len(footprint | changed_squares)
+    iou = intersection / union if union > 0 else 0.0
+
+    extra_squares = changed_squares - footprint
+    local_spill_penalty = 0.0
+    far_spill_penalty = 0.0
+    for square in extra_squares:
+        ratio = ratios.get(chess.square_name(square), 0.0)
+        nearest = min(square_distance(square, fp_square) for fp_square in footprint)
+        if nearest <= 1:
+            local_spill_penalty += ratio * 0.35
+        else:
+            far_spill_penalty += ratio * 1.1
+
+    is_capture = board.is_capture(move)
+    from_weight = 1.7
+    to_weight = 1.6 if is_capture else 1.9
+    score = iou * 1.8 + from_ratio * from_weight + to_ratio * to_weight
+
+    if is_capture:
+        score += 0.2 + CAPTURE_SOURCE_BONUS * min(from_ratio, 0.6)
+        if to_ratio >= CAPTURE_TO_RATIO_FLOOR:
+            score += 0.2
+        else:
+            score -= (CAPTURE_TO_RATIO_FLOOR - to_ratio) * 2.5
+
+    score -= local_spill_penalty
+    score -= far_spill_penalty
+
+    return {
+        "move": move,
+        "score": round(score, 3),
+        "iou": round(iou, 3),
+        "from_ratio": round(from_ratio, 3),
+        "to_ratio": round(to_ratio, 3),
+        "is_capture": is_capture,
+        "extra_squares": sorted(chess.square_name(square) for square in extra_squares),
+        "footprint": sorted(footprint_names),
+    }
 
 
 def get_move_footprint(move):
@@ -315,35 +593,75 @@ def detect_move(diff_img):
     if not changed_squares:
         debug_log("No changed squares detected.")
         return None, "No squares changed.", set(), ratios
-    if len(changed_squares) > MAX_CHANGED_SQUARES:
+    if len(changed_squares) > MAX_CAPTURE_CHANGED_SQUARES:
         names = sorted(chess.square_name(s) for s in changed_squares)
         debug_log(f"Too many changed squares detected: {names}")
         return None, f"Too many squares changed: {names}", changed_squares, ratios
 
-    best_iou = -1.0
-    best_moves = []
+    scored_moves = []
+    capture_sources = set()
     for move in board.legal_moves:
-        footprint = get_move_footprint(move)
-        intersection = len(footprint & changed_squares)
-        union = len(footprint | changed_squares)
-        iou = intersection / union if union > 0 else 0.0
-        if iou > best_iou:
-            best_iou = iou
-            best_moves = [move]
-        elif iou == best_iou:
-            best_moves.append(move)
+        if board.is_capture(move):
+            capture_sources.add(move.from_square)
+        scored_moves.append(score_move_candidate(move, changed_squares, ratios))
 
-    if not best_moves:
+    for candidate in scored_moves:
+        if candidate["is_capture"]:
+            continue
+        if candidate["move"].from_square in capture_sources:
+            candidate["score"] = round(
+                candidate["score"] - QUIET_FROM_CAPTURE_SOURCE_PENALTY * min(candidate["from_ratio"], 0.8),
+                3,
+            )
+
+    if not scored_moves:
         debug_log("No legal moves available while trying to detect move.")
         return None, "No legal moves available.", changed_squares, ratios
 
-    best_move = next((m for m in best_moves if m.promotion == chess.QUEEN), best_moves[0])
+    scored_moves.sort(
+        key=lambda item: (
+            item["score"],
+            item["iou"],
+            item["to_ratio"],
+            1 if item["move"].promotion == chess.QUEEN else 0,
+        ),
+        reverse=True,
+    )
+    top_candidates = [
+        (
+            candidate["move"].uci(),
+            candidate["score"],
+            candidate["iou"],
+            candidate["from_ratio"],
+            candidate["to_ratio"],
+            candidate["extra_squares"],
+        )
+        for candidate in scored_moves[:5]
+    ]
+    debug_log(f"Top move candidates: {top_candidates}")
+
+    best_candidate = scored_moves[0]
+    best_move = best_candidate["move"]
+    best_iou = best_candidate["iou"]
+    best_score = best_candidate["score"]
     changed_names = sorted(chess.square_name(s) for s in changed_squares)
-    best_footprint = sorted(chess.square_name(s) for s in get_move_footprint(best_move))
+    best_footprint = best_candidate["footprint"]
     debug_log(f"Detected changed squares: {changed_names}")
-    debug_log(f"Best move candidate: {best_move.uci()} with footprint {best_footprint} and IoU {best_iou:.2f}")
-    if best_iou < MIN_FOOTPRINT_IOU:
-        return None, f"No legal move match for {changed_names} (IoU {best_iou:.0%})", changed_squares, ratios
+    debug_log(
+        f"Best move candidate: {best_move.uci()} with footprint {best_footprint}, "
+        f"IoU {best_iou:.2f}, score {best_score:.2f}, capture={best_candidate['is_capture']}"
+    )
+
+    move_score_min = CAPTURE_MOVE_SCORE_MIN if best_candidate["is_capture"] else MOVE_SCORE_MIN
+    changed_limit = MAX_CAPTURE_CHANGED_SQUARES if best_candidate["is_capture"] else MAX_CHANGED_SQUARES
+    if len(changed_squares) > changed_limit:
+        return None, f"Too many squares changed for move match: {changed_names}", changed_squares, ratios
+
+    if best_score < move_score_min or (best_iou < MIN_FOOTPRINT_IOU and best_score < (move_score_min + 0.25)):
+        return None, (
+            f"No legal move match for {changed_names} "
+            f"(IoU {best_iou:.0%}, score {best_score:.2f})"
+        ), changed_squares, ratios
     return best_move, board.san(best_move), changed_squares, ratios
 
 
@@ -447,7 +765,7 @@ def log_event(msg: str) -> bool:
 
 
 def camera_calibrate() -> str:
-    global locked_outer_pts, last_stable_gray, board_rotation
+    global locked_outer_pts, last_stable_gray, square_occ_thresholds, board_rotation
     log_board_snapshot("camera_calibrate entry")
     debug_log(f"camera_calibrate called with board FEN: {board.fen()}")
     if not ensure_camera():
@@ -463,6 +781,7 @@ def camera_calibrate() -> str:
         if ret:
             locked_outer_pts = get_outer_corners(gray, corners)
             last_stable_gray = None
+            square_occ_thresholds = {}
             board_rotation = BOARD_ROTATION
             debug_log(f"Calibration corners locked on attempt {attempt + 1}: {locked_outer_pts.tolist()}")
             set_camera_status(f"Calibration successful on attempt {attempt + 1}.")
@@ -508,7 +827,7 @@ def camera_capture_initial() -> str:
         set_camera_status("Initial capture failed: no camera available.")
         return format_result("fail", camera_status)
 
-    median_gray, last_bgr, stability_pct = capture_stable_median(get_perspective_matrix())
+    median_gray, last_bgr, stability_pct, gray_frames, last_raw = capture_stable_median(get_perspective_matrix())
     if stability_pct is None:
         set_camera_status("Initial capture failed: camera read failed.")
         return format_result("fail", camera_status)
@@ -517,21 +836,17 @@ def camera_capture_initial() -> str:
         return format_result("fail", camera_status)
 
     if last_bgr is not None:
-        should_flip, top_mean, bottom_mean = detect_starting_orientation(last_bgr)
-        if should_flip:
-            board_rotation = cv2.ROTATE_180
-            median_gray = cv2.rotate(median_gray, cv2.ROTATE_180)
-            debug_log(
-                f"Applied 180-degree board rotation after initial capture. top_mean={top_mean:.2f}, bottom_mean={bottom_mean:.2f}"
-            )
-        else:
-            board_rotation = None
-            debug_log(
-                f"Kept board rotation unchanged after initial capture. top_mean={top_mean:.2f}, bottom_mean={bottom_mean:.2f}"
-            )
+        chosen_name, detected_rotation, rotation_source = choose_starting_rotation(last_raw, last_bgr)
+        board_rotation = detected_rotation
+        median_gray = rotate_image(median_gray, detected_rotation)
+        gray_frames = [rotate_image(gray, detected_rotation) for gray in gray_frames]
+        debug_log(
+            f"Applied startup board rotation {chosen_name} via {rotation_source}."
+        )
 
     board = chess.Board()
     last_stable_gray = median_gray
+    update_square_thresholds(gray_frames, median_gray)
     debug_log(f"Initial reference stored. mean={float(np.mean(median_gray)):.2f}, std={float(np.std(median_gray)):.2f}")
     debug_log(f"Initial capture reset board to FEN: {board.fen()}")
     set_camera_status("Initial board capture successful.")
@@ -554,7 +869,7 @@ def camera_capture_player_move() -> str:
         set_camera_status("Player capture failed: no camera available.")
         return format_result("fail", camera_status)
 
-    median_gray, _, stability_pct = capture_stable_median(get_perspective_matrix())
+    median_gray, _, stability_pct, _, _ = capture_stable_median(get_perspective_matrix())
     if stability_pct is None:
         set_camera_status("Player capture failed: camera read failed.")
         return format_result("fail", camera_status)
@@ -601,7 +916,7 @@ def camera_refresh_reference() -> str:
     attempt = 1
     while True:
         debug_log(f"camera_refresh_reference attempt {attempt}")
-        median_gray, _, stability_pct = capture_stable_median(get_perspective_matrix())
+        median_gray, _, stability_pct, gray_frames, _ = capture_stable_median(get_perspective_matrix())
         if stability_pct is None:
             set_camera_status("Reference refresh failed: camera read failed.")
             return format_result("fail", camera_status)
@@ -614,6 +929,7 @@ def camera_refresh_reference() -> str:
         time.sleep(0.2)
 
     last_stable_gray = median_gray
+    update_square_thresholds(gray_frames, median_gray)
     debug_log(f"Reference refreshed. mean={float(np.mean(median_gray)):.2f}, std={float(np.std(median_gray)):.2f}")
     debug_log(f"Reference refresh kept board FEN as: {board.fen()}")
     set_camera_status("Reference refreshed after robot move.")
