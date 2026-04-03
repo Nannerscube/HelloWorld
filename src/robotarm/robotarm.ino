@@ -13,467 +13,424 @@
 // ╚═╝  ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝       ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
 // This file needs to read input from chess notation and make the robot arm make that move
 
-// TODO: Initialize variables to the correct pin number
-#define X_STEP_PIN         0
-#define X_DIR_PIN          0
-#define X_ENABLE_PIN       0
-#define X_MIN_PIN          0
-#define X_MAX_PIN          0
 
-#define Y_STEP_PIN         0
-#define Y_DIR_PIN          0
-#define Y_ENABLE_PIN       0
-#define Y_MIN_PIN          0
-#define Y_MAX_PIN          0
+// ██████╗ ██╗███╗   ██╗ ██████╗ ██╗   ██╗████████╗
+// ██╔══██╗██║████╗  ██║██╔═══██╗██║   ██║╚══██╔══╝
+// ██████╔╝██║██╔██╗ ██║██║   ██║██║   ██║   ██║   
+// ██╔═══╝ ██║██║╚██╗██║██║   ██║██║   ██║   ██║   
+// ██║     ██║██║ ╚████║╚██████╔╝╚██████╔╝   ██║   
+// ╚═╝     ╚═╝╚═╝  ╚═══╝ ╚═════╝  ╚═════╝    ╚═╝   
 
-#define Z_STEP_PIN         0
-#define Z_DIR_PIN          0
-#define Z_ENABLE_PIN       0
-#define Z_MIN_PIN          0
-#define Z_MAX_PIN          0
+#define ENABLE_PIN 8
 
-#define E_STEP_PIN         0
-#define E_DIR_PIN          0
-#define E_ENABLE_PIN       0
+#define X_DIR  5
+#define X_STEP 2
 
-#define Q_STEP_PIN         0
-#define Q_DIR_PIN          0
-#define Q_ENABLE_PIN       0
+#define Y_DIR  6
+#define Y_STEP 3
 
-#define SDPOWER            -1
-#define SDSS               0
-#define LED_PIN            0
+#define Z_DIR  7
+#define Z_STEP 4
+#define Z_ENDSTOP 11
 
-#define FAN_PIN            0
-
-#define PS_ON_PIN          0
-#define KILL_PIN           -1
-
-#define HEATER_0_PIN       0
-#define HEATER_1_PIN       0
-#define TEMP_0_PIN         0   // ANALOG NUMBERING
-#define TEMP_1_PIN         0   // ANALOG NUMBERING
-
-#define STEPPER_GRIPPER_PIN_0 0
-#define STEPPER_GRIPPER_PIN_1 0
-#define STEPPER_GRIPPER_PIN_2 0
-#define STEPPER_GRIPPER_PIN_3 0
-
-class RobotGeometry {
-public:
-  RobotGeometry();
-  void set(float axmm, float aymm, float azmm);
-  float getXmm() const;
-  float getYmm() const;
-  float getZmm() const;
-  float getRotRad() const;
-  float getLowRad() const;
-  float getHighRad() const;
-private:
-  void calculateGrad();
-  float xmm;
-  float ymm;
-  float zmm;
-  float rot;
-  float low;
-  float high;
-};
-
-struct Point {
-  float xmm;
-  float ymm;
-  float zmm;
-  float emm;
-};
-
-class Interpolation {
-public:
-  //void resetInterpolation(float px, float py, float pz);
-  //void resetInterpolation(float p1x, float p1y, float p1z, float p2x, float p2y, float p2z);
-  //void resetInterpolation(Point p0, Point p1);
-  
-  void setCurrentPos(float px, float py, float pz, float pe);
-  void setInterpolation(float px, float py, float pz, float pe, float v = 0);
-  void setInterpolation(float p1x, float p1y, float p1z, float p1e, float p2x, float p2y, float p2z, float p2e, float av = 0);
-  
-  void setCurrentPos(Point p);
-  void setInterpolation(Point p1, float v = 0);
-  void setInterpolation(Point p0, Point p1, float v = 0);
-  
-  void updateActualPosition();
-  bool isFinished() const;
-  
-  float getXPosmm() const;
-  float getYPosmm() const;
-  float getZPosmm() const;
-  float getEPosmm() const;
-  Point getPosmm() const;
-  
-private:
-  float getDistance() const;
-  byte state;
-  
-  long startTime;  
-  
-  float xStartmm;
-  float yStartmm;
-  float zStartmm;
-  float eStartmm;
-  float xDelta;
-  float yDelta;
-  float zDelta;
-  float eDelta;
-  float xPosmm;
-  float yPosmm;
-  float zPosmm;
-  float ePosmm;
-  float v;
-  float tmul;
-};
-
-class FanControl {
-public:
-  FanControl(int aPin);
-  void enable(bool value = true);
-  void disable();
-  void setDisableDelay(long millisec);
-  void update();
-private:
-  bool state;
-  int pin;
-  long disableDelay;
-  long nextShutdown;
-};
-
-class RampsStepper {
-public:
-  RampsStepper(int aStepPin, int aDirPin, int aEnablePin);
-  void enable(bool value = true);
-  void disable();
-  
-  bool isOnPosition() const;
-  int getPosition() const;
-  void setPosition(int value);
-  void stepToPosition(int value);
-  void stepRelative(int value);
-  
-  float getPositionRad() const;
-  void setPositionRad(float rad);
-  void stepToPositionRad(float rad);
-  void stepRelativeRad(float rad);
-  
-  void update();
-  
-  void setReductionRatio(float gearRatio, int stepsPerRev);
-private:
-  int stepperStepTargetPosition;
-  int stepperStepPosition;
-    
-  int stepPin;
-  int dirPin;
-  int enablePin;  
-  
-  float radToStepFactor;
-};
-
-template <typename Element> class Queue {
-public:
-  Queue(int alen);
-  ~Queue();
-  bool push(Element elem);
-  Element pop();
-  bool isFull() const;
-  bool isEmpty() const;
-  int getFreeSpace() const;
-  int getMaxLength() const;
-  inline int getUsedSpace() const;
-private:
-  Queue(Queue<Element>& q);  //copy const.
-  Element* data;
-  int len;
-  int start;
-  int count;
-};
+#define SERVO_PIN 12
 
 
-template <typename Element>
-Queue<Element>::Queue(int alen) {
-  data = new Element[alen];
-  len = alen;
-  start = 0;
-  count = 0;
-}
+//  ██████╗ ██████╗ ███╗   ██╗███████╗████████╗ █████╗ ███╗   ██╗████████╗███████╗
+// ██╔════╝██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝██╔══██╗████╗  ██║╚══██╔══╝██╔════╝
+// ██║     ██║   ██║██╔██╗ ██║███████╗   ██║   ███████║██╔██╗ ██║   ██║   ███████╗
+// ██║     ██║   ██║██║╚██╗██║╚════██║   ██║   ██╔══██║██║╚██╗██║   ██║   ╚════██║
+// ╚██████╗╚██████╔╝██║ ╚████║███████║   ██║   ██║  ██║██║ ╚████║   ██║   ███████║
+//  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝
 
-template <typename Element>
-Queue<Element>::~Queue() {
-  delete data;
-}
+#define STEPS_PER_REV 50
+#define MICROSTEP     1
+#define STEP_DELAY_US 6000
+#define Y_STEP_DELAY_MS 3000
+#define Z_STEP_DELAY_MS 8000  // slower than Y
+#define Z_EXTRA_STEPS 100     // extra Z after Y stops
 
-template <typename Element>
-Queue<Element>::Queue(Queue<Element>& q) {
-  //nothing ever is allowed to do something here
-}
+#define X_ROTATE_STEPS 168    // steps for 90 degrees more less
 
-template <typename Element>
-bool Queue<Element>::push(Element elem) {
-  data[(start + count++) % len] = elem;
-  return true;
-}
+#define GRIPPER_CLOSED 2200
+#define GRIPPER_OPEN   1000
 
-template <typename Element>
-Element Queue<Element>::pop() {
-  count--;
-  int s = start;
-  start = (start + 1) % len;
-  return data[(s) % len];
-}
+#define 
 
-template <typename Element>
-bool Queue<Element>::isFull() const {
-  return count >= len;
-}
 
-template <typename Element>
-bool Queue<Element>::isEmpty() const {
-  return count <= 0;
-}
-
-template <typename Element>
-int Queue<Element>::getFreeSpace() const {
-  return len - count;
-}
-
-template <typename Element>
-int Queue<Element>::getMaxLength() const {
-  return len;
-}
-
-template <typename Element>
-int Queue<Element>::getUsedSpace() const {
-  return count;
-}
-
-struct Cmd {
-  char id;
-  int num;
-  float valueX;
-  float valueY;
-  float valueZ;
-  float valueF;
-  float valueE;
-  float valueT; 
-};
-
-class Command {
-  public:
-    Command();
-    bool handleGcode();
-    bool processMessage(String& msg);
-    Cmd getCmd() const;
-  private: 
-    int pos(String& s, char c, int start = 0);
-    String message;
-    Cmd command;
-};
-
-void printErr();
-void printFault();
-void printComment(char* c);
-void printComment(String& s);
-void printOk();
-
-Stepper stepper(2400, STEPPER_GRIPPER_PIN_0, STEPPER_GRIPPER_PIN_1, STEPPER_GRIPPER_PIN_2, STEPPER_GRIPPER_PIN_3);
-RampsStepper stepperRotate(Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN);
-RampsStepper stepperLower(Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN);
-RampsStepper stepperHigher(X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN);
-RampsStepper stepperExtruder(E_STEP_PIN, E_DIR_PIN, E_ENABLE_PIN);
-FanControl fan(FAN_PIN);
-RobotGeometry geometry;
-Interpolation interpolator;
-Queue<Cmd> queue(15);
-Command command;
-
+// ███████╗███████╗████████╗██╗   ██╗██████╗ 
+// ██╔════╝██╔════╝╚══██╔══╝██║   ██║██╔══██╗
+// ███████╗█████╗     ██║   ██║   ██║██████╔╝
+// ╚════██║██╔══╝     ██║   ██║   ██║██╔═══╝ 
+// ███████║███████╗   ██║   ╚██████╔╝██║     
+// ╚══════╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝     
 
 void setup() {
-  Serial.begin(9600);
-  
-  //various pins..
-  pinMode(HEATER_0_PIN  , OUTPUT);
-  pinMode(HEATER_1_PIN  , OUTPUT);
-  pinMode(LED_PIN       , OUTPUT);
-  
-  //unused Stepper..
-  pinMode(E_STEP_PIN   , OUTPUT);
-  pinMode(E_DIR_PIN    , OUTPUT);
-  pinMode(E_ENABLE_PIN , OUTPUT);
-  
-  //unused Stepper..
-  pinMode(Q_STEP_PIN   , OUTPUT);
-  pinMode(Q_DIR_PIN    , OUTPUT);
-  pinMode(Q_ENABLE_PIN , OUTPUT);
-  
-  //GripperPins
-  pinMode(STEPPER_GRIPPER_PIN_0, OUTPUT);
-  pinMode(STEPPER_GRIPPER_PIN_1, OUTPUT);
-  pinMode(STEPPER_GRIPPER_PIN_2, OUTPUT);
-  pinMode(STEPPER_GRIPPER_PIN_3, OUTPUT);
-  digitalWrite(STEPPER_GRIPPER_PIN_0, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_1, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_2, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_3, LOW);
+  Monitor.begin();
 
+  pinMode(X_DIR, OUTPUT);
+  pinMode(X_STEP, OUTPUT);
+  pinMode(Y_DIR, OUTPUT);
+  pinMode(Y_STEP, OUTPUT);
+  pinMode(Z_DIR, OUTPUT);
+  pinMode(Z_STEP, OUTPUT);
+  pinMode(ENABLE_PIN, OUTPUT);
+  pinMode(Z_ENDSTOP, INPUT_PULLUP);
+
+  digitalWrite(ENABLE_PIN, LOW);
   
-  //reduction of steppers..
-  stepperHigher.setReductionRatio(32.0 / 9.0, 200 * 16);  //big gear: 32, small gear: 9, steps per rev: 200, microsteps: 16
-  stepperLower.setReductionRatio( 32.0 / 9.0, 200 * 16);
-  stepperRotate.setReductionRatio(32.0 / 9.0, 200 * 16);
-  stepperExtruder.setReductionRatio(32.0 / 9.0, 200 * 16);
-  
-  //start positions..
-  stepperHigher.setPositionRad(PI / 2.0);  //90°
-  stepperLower.setPositionRad(0);          // 0°
-  stepperRotate.setPositionRad(0);         // 0°
-  stepperExtruder.setPositionRad(0);
-  
-  //enable and init..
-  setStepperEnable(false);
-  interpolator.setInterpolation(0,120,120,0, 0,120,120,0);
-  
-  Serial.println("start");
+  // Go to initial position
+  delay(2000);
+  initializePosition()
+  Monitor.println("Finished YZ Home");
+  rotateX90(true);
+  Monitor.println("Finished X 90 Rotation");
 }
 
-void setStepperEnable(bool enable) {
-  stepperRotate.enable(enable);
-  stepperLower.enable(enable);
-  stepperHigher.enable(enable); 
-  stepperExtruder.enable(enable); 
-  fan.enable(enable);
+// ██╗      ██████╗  ██████╗ ██████╗ 
+// ██║     ██╔═══██╗██╔═══██╗██╔══██╗
+// ██║     ██║   ██║██║   ██║██████╔╝
+// ██║     ██║   ██║██║   ██║██╔═══╝ 
+// ███████╗╚██████╔╝╚██████╔╝██║     
+// ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
+
+void loop() {
+
 }
 
-void loop () {
-  //update and Calculate all Positions, Geometry and Drive all Motors...
-  interpolator.updateActualPosition();
-  geometry.set(interpolator.getXPosmm(), interpolator.getYPosmm(), interpolator.getZPosmm());
-  stepperRotate.stepToPositionRad(geometry.getRotRad());
-  stepperLower.stepToPositionRad (geometry.getLowRad());
-  stepperHigher.stepToPositionRad(geometry.getHighRad());
-  stepperExtruder.stepToPositionRad(interpolator.getEPosmm());
-  stepperRotate.update();
-  stepperLower.update();
-  stepperHigher.update(); 
-  fan.update();
-  
-  if (!queue.isFull()) {
-    if (command.handleGcode()) {
-      queue.push(command.getCmd());
-      printOk();
-    }
+// ██╗      ██████╗  ██████╗ ██╗ ██████╗
+// ██║     ██╔═══██╗██╔════╝ ██║██╔════╝
+// ██║     ██║   ██║██║  ███╗██║██║     
+// ██║     ██║   ██║██║   ██║██║██║     
+// ███████╗╚██████╔╝╚██████╔╝██║╚██████╗
+// ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝ ╚═════╝
+// Takes a square in chess notation (e.g. "A1", "H8") and moves the arm to it
+void goToSquare(char col, int row) {
+  switch (col) {
+    case 'A': case 'a':
+      switch (row) {
+        case 1: goToA1(); break;
+        case 2: goToA2(); break;
+        case 3: goToA3(); break;
+        case 4: goToA4(); break;
+        case 5: goToA5(); break;
+        case 6: goToA6(); break;
+        case 7: goToA7(); break;
+        case 8: goToA8(); break;
+      } break;
+
+    case 'B': case 'b':
+      switch (row) {
+        case 1: goToB1(); break;
+        case 2: goToB2(); break;
+        case 3: goToB3(); break;
+        case 4: goToB4(); break;
+        case 5: goToB5(); break;
+        case 6: goToB6(); break;
+        case 7: goToB7(); break;
+        case 8: goToB8(); break;
+      } break;
+
+    case 'C': case 'c':
+      switch (row) {
+        case 1: goToC1(); break;
+        case 2: goToC2(); break;
+        case 3: goToC3(); break;
+        case 4: goToC4(); break;
+        case 5: goToC5(); break;
+        case 6: goToC6(); break;
+        case 7: goToC7(); break;
+        case 8: goToC8(); break;
+      } break;
+
+    case 'D': case 'd':
+      switch (row) {
+        case 1: goToD1(); break;
+        case 2: goToD2(); break;
+        case 3: goToD3(); break;
+        case 4: goToD4(); break;
+        case 5: goToD5(); break;
+        case 6: goToD6(); break;
+        case 7: goToD7(); break;
+        case 8: goToD8(); break;
+      } break;
+
+    case 'E': case 'e':
+      switch (row) {
+        case 1: goToE1(); break;
+        case 2: goToE2(); break;
+        case 3: goToE3(); break;
+        case 4: goToE4(); break;
+        case 5: goToE5(); break;
+        case 6: goToE6(); break;
+        case 7: goToE7(); break;
+        case 8: goToE8(); break;
+      } break;
+
+    case 'F': case 'f':
+      switch (row) {
+        case 1: goToF1(); break;
+        case 2: goToF2(); break;
+        case 3: goToF3(); break;
+        case 4: goToF4(); break;
+        case 5: goToF5(); break;
+        case 6: goToF6(); break;
+        case 7: goToF7(); break;
+        case 8: goToF8(); break;
+      } break;
+
+    case 'G': case 'g':
+      switch (row) {
+        case 1: goToG1(); break;
+        case 2: goToG2(); break;
+        case 3: goToG3(); break;
+        case 4: goToG4(); break;
+        case 5: goToG5(); break;
+        case 6: goToG6(); break;
+        case 7: goToG7(); break;
+        case 8: goToG8(); break;
+      } break;
+
+    case 'H': case 'h':
+      switch (row) {
+        case 1: goToH1(); break;
+        case 2: goToH2(); break;
+        case 3: goToH3(); break;
+        case 4: goToH4(); break;
+        case 5: goToH5(); break;
+        case 6: goToH6(); break;
+        case 7: goToH7(); break;
+        case 8: goToH8(); break;
+      } break;
   }
-  if ((!queue.isEmpty()) && interpolator.isFinished()) {
-    executeCommand(queue.pop());
-  }
-    
-  if (millis() %500 <250) {
-    digitalWrite(LED_PIN, HIGH);
+}
+
+// ██████╗ ███████╗ ██████╗ ██████╗ ██████╗ ██████╗ ██╗███╗   ██╗ ██████╗ 
+// ██╔══██╗██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗██║████╗  ██║██╔════╝ 
+// ██████╔╝█████╗  ██║     ██║   ██║██████╔╝██║  ██║██║██╔██╗ ██║██║  ███╗
+// ██╔══██╗██╔══╝  ██║     ██║   ██║██╔══██╗██║  ██║██║██║╚██╗██║██║   ██║
+// ██║  ██║███████╗╚██████╗╚██████╔╝██║  ██║██████╔╝██║██║ ╚████║╚██████╔╝
+// ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═══╝ ╚═════╝ 
+int  home_dirPin1, home_stepPin1;
+bool home_dir1;
+int  home_dirPin2, home_stepPin2;
+bool home_dir2;
+int  home_steps;
+bool home_isTwoMotors;
+
+void rememberMove(int dirPin1, int stepPin1, bool dir1, int steps) {
+  home_dirPin1     = dirPin1;
+  home_stepPin1    = stepPin1;
+  home_dir1        = dir1;
+  home_steps       = steps;
+  home_isTwoMotors = false;
+}
+
+void rememberMove(int dirPin1, int stepPin1, bool dir1,
+                  int dirPin2, int stepPin2, bool dir2,
+                  int steps, bool isTwoMotors) {
+  home_dirPin1  = dirPin1;
+  home_stepPin1 = stepPin1;
+  home_dir1     = dir1;
+  home_dirPin2  = dirPin2;
+  home_stepPin2 = stepPin2;
+  home_dir2     = dir2;
+  home_steps    = steps;
+  home_isTwoMotors = isTwoMotors;
+}
+
+void goHome() {
+  if (home_isTwoMotors) {
+    stepTwoMotors(home_dirPin1, home_stepPin1, !home_dir1,
+                  home_dirPin2, home_stepPin2, !home_dir2,
+                  home_steps);
   } else {
-    digitalWrite(LED_PIN, LOW);
+    stepMotor(home_dirPin1, home_stepPin1, home_steps, !home_dir1);
   }
 }
 
 
 
+// ███╗   ███╗ ██████╗ ████████╗ ██████╗ ██████╗ ███████╗
+// ████╗ ████║██╔═══██╗╚══██╔══╝██╔═══██╗██╔══██╗██╔════╝
+// ██╔████╔██║██║   ██║   ██║   ██║   ██║██████╔╝███████╗
+// ██║╚██╔╝██║██║   ██║   ██║   ██║   ██║██╔══██╗╚════██║
+// ██║ ╚═╝ ██║╚██████╔╝   ██║   ╚██████╔╝██║  ██║███████║
+// ╚═╝     ╚═╝ ╚═════╝    ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝
 
-void cmdMove(Cmd (&cmd)) {
-  interpolator.setInterpolation(cmd.valueX, cmd.valueY, cmd.valueZ, cmd.valueE, cmd.valueF);
-}
-void cmdDwell(Cmd (&cmd)) {
-  delay(int(cmd.valueT * 1000));
-}
-void cmdGripperOn(Cmd (&cmd)) {
-  stepper.setSpeed(5);
-  stepper.step(int(cmd.valueT));
-  delay(50);
-  digitalWrite(STEPPER_GRIPPER_PIN_0, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_1, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_2, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_3, LOW);
-  //printComment("// NOT IMPLEMENTED");
-  //printFault();
-}
-void cmdGripperOff(Cmd (&cmd)) {
-  stepper.setSpeed(5);
-  stepper.step(-int(cmd.valueT));
-  delay(50);
-  digitalWrite(STEPPER_GRIPPER_PIN_0, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_1, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_2, LOW);
-  digitalWrite(STEPPER_GRIPPER_PIN_3, LOW);
-  //printComment("// NOT IMPLEMENTED");
-  //printFault();
-}
-void cmdStepperOn() {
-  setStepperEnable(true);
-}
-void cmdStepperOff() {
-  setStepperEnable(false);
-}
-void cmdFanOn() {
-  fan.enable(true);
-}
-void cmdFanOff() {
-  fan.enable(false);
+// Sets the gripper to either open with GRIPPER_OPEN or close with GRIPPER_CLOSE
+void setGripper(unsigned int pulse) {
+  for (unsigned char i = 0; i < 8; i++) {
+    digitalWrite(SERVO_PIN, HIGH);
+    delayMicroseconds(pulse);
+    digitalWrite(SERVO_PIN, LOW);
+  }
 }
 
-void handleAsErr(Cmd (&cmd)) {
-  printComment("Unknown Cmd " + String(cmd.id) + String(cmd.num) + " (queued)"); 
-  printFault();
+// Activates a given stepper motor for a set amount of steps in a set direction
+void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
+  digitalWrite(dirPin, clockwise ? HIGH : LOW);
+  delay(1);
+  for (int i = 0; i < steps * MICROSTEP; i++) {
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(STEP_DELAY_US);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(STEP_DELAY_US);
+  }
 }
 
-void executeCommand(Cmd cmd) {
-  if (cmd.id == -1) {
-    String msg = "parsing Error";
-    printComment(msg);
-    handleAsErr(cmd);
-    return;
+// Activates two stepper motors at a time for a set amount of steps in a set direction
+void stepTwoMotors(int dirPin1, int stepPin1, bool dir1,
+                   int dirPin2, int stepPin2, bool dir2,
+                   int steps) {
+  digitalWrite(dirPin1, dir1 ? HIGH : LOW);
+  digitalWrite(dirPin2, dir2 ? HIGH : LOW);
+  delay(1);
+
+  for (int i = 0; i < steps * MICROSTEP; i++) {
+    digitalWrite(stepPin1, HIGH);
+    digitalWrite(stepPin2, HIGH);
+    delayMicroseconds(STEP_DELAY_US);
+    digitalWrite(stepPin1, LOW);
+    digitalWrite(stepPin2, LOW);
+    delayMicroseconds(STEP_DELAY_US);
+  }
+}
+
+
+// ██████╗  ██████╗ ███████╗██╗████████╗██╗ ██████╗ ███╗   ██╗███████╗
+// ██╔══██╗██╔═══██╗██╔════╝██║╚══██╔══╝██║██╔═══██╗████╗  ██║██╔════╝
+// ██████╔╝██║   ██║███████╗██║   ██║   ██║██║   ██║██╔██╗ ██║███████╗
+// ██╔═══╝ ██║   ██║╚════██║██║   ██║   ██║██║   ██║██║╚██╗██║╚════██║
+// ██║     ╚██████╔╝███████║██║   ██║   ██║╚██████╔╝██║ ╚████║███████║
+// ╚═╝      ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+
+// Moves the robot arm into home location on startup
+void initializePosition() { 
+  // Moving Y backward with slow Z lift
+  digitalWrite(Y_DIR, LOW); // Y backward
+  digitalWrite(Z_DIR, HIGH); // Z up
+
+  int zCounter = 0;
+
+  while (digitalRead(Z_ENDSTOP) == LOW) {  // LOW = pressed | HIGH = not pressed
+    // Step Y
+    digitalWrite(Y_STEP, HIGH);
+    delayMicroseconds(Y_STEP_DELAY_MS);
+    digitalWrite(Y_STEP, LOW);
+    delayMicroseconds(Y_STEP_DELAY_MS);
+
+    // Step Z slower
+    zCounter++;
+    if (zCounter >= 3) { // 1 Z step per 3 Y steps
+      digitalWrite(Z_STEP, HIGH);
+      delayMicroseconds(Z_STEP_DELAY_MS);
+      digitalWrite(Z_STEP, LOW);
+      delayMicroseconds(Z_STEP_DELAY_MS);
+      zCounter = 0;
+    }
+  }
+
+  // Once Y endstops hits
+
+  // Small back off on Y
+  digitalWrite(Y_DIR, HIGH);
+  for (int i = 0; i < 20; i++) {
+    digitalWrite(Y_STEP, HIGH);
+    delayMicroseconds(Y_STEP_DELAY_MS);
+    digitalWrite(Y_STEP, LOW);
+    delayMicroseconds(Y_STEP_DELAY_MS);
+  }
+
+  // Moving Z further up
+  for (int i = 0; i < Z_EXTRA_STEPS; i++) {
+    digitalWrite(Z_STEP, HIGH);
+    delayMicroseconds(Z_STEP_DELAY_MS);
+    digitalWrite(Z_STEP, LOW);
+    delayMicroseconds(Z_STEP_DELAY_MS);
   }
   
-  if (cmd.valueX == NAN) {
-    cmd.valueX = interpolator.getXPosmm();
-  }
-  if (cmd.valueY == NAN) {
-    cmd.valueY = interpolator.getYPosmm();
-  }
-  if (cmd.valueZ == NAN) {
-    cmd.valueZ = interpolator.getZPosmm();
-  }
-  if (cmd.valueE == NAN) {
-    cmd.valueE = interpolator.getEPosmm();
-  }
-  
-   //decide what to do
-  if (cmd.id == 'G') {
-    switch (cmd.num) {
-      case 0: cmdMove(cmd); break;
-      case 1: cmdMove(cmd); break;
-      case 4: cmdDwell(cmd); break;
-      //case 21: break; //set to mm
-      //case 90: cmdToAbsolute(); break;
-      //case 91: cmdToRelative(); break;
-      //case 92: cmdSetPosition(cmd); break;
-      default: handleAsErr(cmd); 
-    }
-  } else if (cmd.id == 'M') {
-    switch (cmd.num) {
-      //case 0: cmdEmergencyStop(); break;
-      case 3: cmdGripperOn(cmd); break;
-      case 5: cmdGripperOff(cmd); break;
-      case 17: cmdStepperOn(); break;
-      case 18: cmdStepperOff(); break;
-      case 106: cmdFanOn(); break;
-      case 107: cmdFanOff(); break;
-      default: handleAsErr(cmd); 
-    }
-  } else {
-    handleAsErr(cmd); 
+}
+// Rotate 90 degrees for X Home, true for clockwise, false for counter-clockwise
+void rotateX90(bool clockwise) {
+  digitalWrite(X_DIR, clockwise ? HIGH : LOW);  
+  delay(1);
+  for (int i = 0; i < X_ROTATE_STEPS; i++) {
+    digitalWrite(X_STEP, HIGH);
+    delayMicroseconds(3000);
+    digitalWrite(X_STEP, LOW);
+    delayMicroseconds(3000);
   }
 }
+
+void goToA1() { /* TODO */ }
+void goToA2() { /* TODO */ }
+void goToA3() { /* TODO */ }
+void goToA4() { /* TODO */ }
+void goToA5() { /* TODO */ }
+void goToA6() { /* TODO */ }
+void goToA7() { /* TODO */ }
+void goToA8() { /* TODO */ }
+
+void goToB1() { /* TODO */ }
+void goToB2() { /* TODO */ }
+void goToB3() { /* TODO */ }
+void goToB4() { /* TODO */ }
+void goToB5() { /* TODO */ }
+void goToB6() { /* TODO */ }
+void goToB7() { /* TODO */ }
+void goToB8() { /* TODO */ }
+
+void goToC1() { /* TODO */ }
+void goToC2() { /* TODO */ }
+void goToC3() { /* TODO */ }
+void goToC4() { /* TODO */ }
+void goToC5() { /* TODO */ }
+void goToC6() { /* TODO */ }
+void goToC7() { /* TODO */ }
+void goToC8() { /* TODO */ }
+
+void goToD1() { /* TODO */ }
+void goToD2() { /* TODO */ }
+void goToD3() { /* TODO */ }
+void goToD4() { /* TODO */ }
+void goToD5() { /* TODO */ }
+void goToD6() { /* TODO */ }
+void goToD7() { /* TODO */ }
+void goToD8() { /* TODO */ }
+
+void goToE1() { /* TODO */ }
+void goToE2() { /* TODO */ }
+void goToE3() { /* TODO */ }
+void goToE4() { /* TODO */ }
+void goToE5() { /* TODO */ }
+void goToE6() { /* TODO */ }
+void goToE7() { /* TODO */ }
+void goToE8() { /* TODO */ }
+
+void goToF1() { /* TODO */ }
+void goToF2() { /* TODO */ }
+void goToF3() { /* TODO */ }
+void goToF4() { /* TODO */ }
+void goToF5() { /* TODO */ }
+void goToF6() { /* TODO */ }
+void goToF7() { /* TODO */ }
+void goToF8() { /* TODO */ }
+
+void goToG1() { /* TODO */ }
+void goToG2() { /* TODO */ }
+void goToG3() { /* TODO */ }
+void goToG4() { /* TODO */ }
+void goToG5() { /* TODO */ }
+void goToG6() { /* TODO */ }
+void goToG7() { /* TODO */ }
+void goToG8() { /* TODO */ }
+
+void goToH1() { /* TODO */ }
+void goToH2() { /* TODO */ }
+void goToH3() { /* TODO */ }
+void goToH4() { /* TODO */ }
+void goToH5() { /* TODO */ }
+void goToH6() { /* TODO */ }
+void goToH7() { /* TODO */ }
+void goToH8() { /* TODO */ }
