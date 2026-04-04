@@ -18,7 +18,7 @@
 #define MICROSTEP     1
 #define STEP_DELAY_US 6000
 
-#define GRIPPER_CLOSED 2200
+#define GRIPPER_CLOSED 2500
 #define GRIPPER_OPEN 1000
 
 void setGripper(unsigned int pulse) {
@@ -97,7 +97,7 @@ void loop() {
   // Move 5: Z down + Y forward (60 steps), then close gripper
   stepTwoMotors(Z_DIR, Z_STEP, false,
                 Y_DIR, Y_STEP, true,
-                50);
+                75);
   delay(500);
   setGripper(GRIPPER_CLOSED);
   delay(500);
@@ -107,7 +107,7 @@ void loop() {
   // Undo Move 5: Z up + Y back (60 steps)
   stepTwoMotors(Z_DIR, Z_STEP, true,
                 Y_DIR, Y_STEP, false,
-                50);
+                75);
   delay(300);
 
   // Undo Move 4: Z down + Y back

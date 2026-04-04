@@ -11,7 +11,9 @@
 // ██╔══██╗██║   ██║██╔══██╗██║   ██║   ██║       ██╔══██║██╔══██╗██║╚██╔╝██║
 // ██║  ██║╚██████╔╝██████╔╝╚██████╔╝   ██║       ██║  ██║██║  ██║██║ ╚═╝ ██║
 // ╚═╝  ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝       ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-// This file needs to read input from chess notation and make the robot arm make that move
+// This file needs to read input from chess notation and make the robot arm make that 
+
+#include <Arduino_RouterBridge.h>
 
 
 // ██████╗ ██╗███╗   ██╗ ██████╗ ██╗   ██╗████████╗
@@ -55,7 +57,30 @@
 #define GRIPPER_CLOSED 2200
 #define GRIPPER_OPEN   1000
 
-#define 
+#define MAX_MOVES 10
+
+struct Move {
+  int  dirPin1, stepPin1;
+  bool dir1;
+  int  dirPin2, stepPin2;
+  bool dir2;
+  int  steps;
+  bool isTwoMotors;
+
+  Move() {}
+  Move(int dp1, int sp1, bool d1, int dp2, int sp2, bool d2, int s, bool two)
+    : dirPin1(dp1), stepPin1(sp1), dir1(d1),
+      dirPin2(dp2), stepPin2(sp2), dir2(d2),
+      steps(s), isTwoMotors(two) {}
+};
+Move moveQueue[MAX_MOVES];
+int  moveCount = 0;
+
+void rememberMove(int dirPin1, int stepPin1, int steps, bool clockwise);
+void rememberMove(int dirPin1, int stepPin1, bool dir1,
+                  int dirPin2, int stepPin2, bool dir2,
+                  int steps);
+void goHome();
 
 
 // ███████╗███████╗████████╗██╗   ██╗██████╗ 
@@ -78,14 +103,16 @@ void setup() {
   pinMode(Z_ENDSTOP, INPUT_PULLUP);
 
   digitalWrite(ENABLE_PIN, LOW);
-  
+
   // Go to initial position
   delay(2000);
-  initializePosition()
+  initializePosition();
   Monitor.println("Finished YZ Home");
-  rotateX90(true);
+  rotateX90(false);
   Monitor.println("Finished X 90 Rotation");
+  delay(500);
 }
+
 
 // ██╗      ██████╗  ██████╗ ██████╗ 
 // ██║     ██╔═══██╗██╔═══██╗██╔══██╗
@@ -95,8 +122,11 @@ void setup() {
 // ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
 
 void loop() {
-
+  setGripper(GRIPPER_OPEN);
+  goToSquare('A', 1);
+  while(true);
 }
+
 
 // ██╗      ██████╗  ██████╗ ██╗ ██████╗
 // ██║     ██╔═══██╗██╔════╝ ██║██╔════╝
@@ -106,6 +136,8 @@ void loop() {
 // ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝ ╚═════╝
 // Takes a square in chess notation (e.g. "A1", "H8") and moves the arm to it
 void goToSquare(char col, int row) {
+  moveCount = 0;
+  rotateX90(true);
   switch (col) {
     case 'A': case 'a':
       switch (row) {
@@ -205,50 +237,40 @@ void goToSquare(char col, int row) {
   }
 }
 
+
 // ██████╗ ███████╗ ██████╗ ██████╗ ██████╗ ██████╗ ██╗███╗   ██╗ ██████╗ 
 // ██╔══██╗██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗██║████╗  ██║██╔════╝ 
 // ██████╔╝█████╗  ██║     ██║   ██║██████╔╝██║  ██║██║██╔██╗ ██║██║  ███╗
 // ██╔══██╗██╔══╝  ██║     ██║   ██║██╔══██╗██║  ██║██║██║╚██╗██║██║   ██║
 // ██║  ██║███████╗╚██████╗╚██████╔╝██║  ██║██████╔╝██║██║ ╚████║╚██████╔╝
 // ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═══╝ ╚═════╝ 
-int  home_dirPin1, home_stepPin1;
-bool home_dir1;
-int  home_dirPin2, home_stepPin2;
-bool home_dir2;
-int  home_steps;
-bool home_isTwoMotors;
 
-void rememberMove(int dirPin1, int stepPin1, bool dir1, int steps) {
-  home_dirPin1     = dirPin1;
-  home_stepPin1    = stepPin1;
-  home_dir1        = dir1;
-  home_steps       = steps;
-  home_isTwoMotors = false;
+void rememberMove(int dirPin1, int stepPin1, int steps, bool clockwise) {
+  if (moveCount >= MAX_MOVES) return;
+  moveQueue[moveCount++] = Move(dirPin1, stepPin1, clockwise, 0, 0, false, steps, false);
 }
 
 void rememberMove(int dirPin1, int stepPin1, bool dir1,
                   int dirPin2, int stepPin2, bool dir2,
-                  int steps, bool isTwoMotors) {
-  home_dirPin1  = dirPin1;
-  home_stepPin1 = stepPin1;
-  home_dir1     = dir1;
-  home_dirPin2  = dirPin2;
-  home_stepPin2 = stepPin2;
-  home_dir2     = dir2;
-  home_steps    = steps;
-  home_isTwoMotors = isTwoMotors;
+                  int steps) {
+  if (moveCount >= MAX_MOVES) return;
+  moveQueue[moveCount++] = Move(dirPin1, stepPin1, dir1, dirPin2, stepPin2, dir2, steps, true);
 }
 
 void goHome() {
-  if (home_isTwoMotors) {
-    stepTwoMotors(home_dirPin1, home_stepPin1, !home_dir1,
-                  home_dirPin2, home_stepPin2, !home_dir2,
-                  home_steps);
-  } else {
-    stepMotor(home_dirPin1, home_stepPin1, home_steps, !home_dir1);
+  for (int i = moveCount - 1; i >= 0; i--) {
+    Move& m = moveQueue[i];
+    if (m.isTwoMotors) {
+      stepTwoMotors(m.dirPin1, m.stepPin1, !m.dir1,
+                    m.dirPin2, m.stepPin2, !m.dir2,
+                    m.steps);
+    } else {
+      stepMotor(m.dirPin1, m.stepPin1, m.steps, !m.dir1);
+    }
   }
+  moveCount = 0;
+  rotateX90(false);
 }
-
 
 
 // ███╗   ███╗ ██████╗ ████████╗ ██████╗ ██████╗ ███████╗
@@ -258,7 +280,6 @@ void goHome() {
 // ██║ ╚═╝ ██║╚██████╔╝   ██║   ╚██████╔╝██║  ██║███████║
 // ╚═╝     ╚═╝ ╚═════╝    ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝
 
-// Sets the gripper to either open with GRIPPER_OPEN or close with GRIPPER_CLOSE
 void setGripper(unsigned int pulse) {
   for (unsigned char i = 0; i < 8; i++) {
     digitalWrite(SERVO_PIN, HIGH);
@@ -267,7 +288,6 @@ void setGripper(unsigned int pulse) {
   }
 }
 
-// Activates a given stepper motor for a set amount of steps in a set direction
 void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
   digitalWrite(dirPin, clockwise ? HIGH : LOW);
   delay(1);
@@ -279,14 +299,12 @@ void stepMotor(int dirPin, int stepPin, int steps, bool clockwise) {
   }
 }
 
-// Activates two stepper motors at a time for a set amount of steps in a set direction
 void stepTwoMotors(int dirPin1, int stepPin1, bool dir1,
                    int dirPin2, int stepPin2, bool dir2,
                    int steps) {
   digitalWrite(dirPin1, dir1 ? HIGH : LOW);
   digitalWrite(dirPin2, dir2 ? HIGH : LOW);
   delay(1);
-
   for (int i = 0; i < steps * MICROSTEP; i++) {
     digitalWrite(stepPin1, HIGH);
     digitalWrite(stepPin2, HIGH);
@@ -305,24 +323,20 @@ void stepTwoMotors(int dirPin1, int stepPin1, bool dir1,
 // ██║     ╚██████╔╝███████║██║   ██║   ██║╚██████╔╝██║ ╚████║███████║
 // ╚═╝      ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 
-// Moves the robot arm into home location on startup
-void initializePosition() { 
-  // Moving Y backward with slow Z lift
-  digitalWrite(Y_DIR, LOW); // Y backward
+void initializePosition() {
+  digitalWrite(Y_DIR, LOW);  // Y backward
   digitalWrite(Z_DIR, HIGH); // Z up
 
   int zCounter = 0;
 
-  while (digitalRead(Z_ENDSTOP) == LOW) {  // LOW = pressed | HIGH = not pressed
-    // Step Y
+  while (digitalRead(Z_ENDSTOP) == LOW) {
     digitalWrite(Y_STEP, HIGH);
     delayMicroseconds(Y_STEP_DELAY_MS);
     digitalWrite(Y_STEP, LOW);
     delayMicroseconds(Y_STEP_DELAY_MS);
 
-    // Step Z slower
     zCounter++;
-    if (zCounter >= 3) { // 1 Z step per 3 Y steps
+    if (zCounter >= 3) {
       digitalWrite(Z_STEP, HIGH);
       delayMicroseconds(Z_STEP_DELAY_MS);
       digitalWrite(Z_STEP, LOW);
@@ -330,8 +344,6 @@ void initializePosition() {
       zCounter = 0;
     }
   }
-
-  // Once Y endstops hits
 
   // Small back off on Y
   digitalWrite(Y_DIR, HIGH);
@@ -349,11 +361,10 @@ void initializePosition() {
     digitalWrite(Z_STEP, LOW);
     delayMicroseconds(Z_STEP_DELAY_MS);
   }
-  
 }
-// Rotate 90 degrees for X Home, true for clockwise, false for counter-clockwise
+
 void rotateX90(bool clockwise) {
-  digitalWrite(X_DIR, clockwise ? HIGH : LOW);  
+  digitalWrite(X_DIR, clockwise ? HIGH : LOW);
   delay(1);
   for (int i = 0; i < X_ROTATE_STEPS; i++) {
     digitalWrite(X_STEP, HIGH);
@@ -363,7 +374,41 @@ void rotateX90(bool clockwise) {
   }
 }
 
-void goToA1() { /* TODO */ }
+
+void goToA1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 125, true);
+  stepMotor(X_DIR, X_STEP, 125, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 15, true);
+  stepMotor(Z_DIR, Z_STEP, 15, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  delay(500);
+  delay(2000);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
 void goToA2() { /* TODO */ }
 void goToA3() { /* TODO */ }
 void goToA4() { /* TODO */ }
