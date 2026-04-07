@@ -57,7 +57,7 @@
 #define GRIPPER_CLOSED 2200
 #define GRIPPER_OPEN   1000
 
-#define MAX_MOVES 10
+#define MAX_MOVES 30
 
 struct Move {
   int  dirPin1, stepPin1;
@@ -123,7 +123,7 @@ void setup() {
 
 void loop() {
   setGripper(GRIPPER_OPEN);
-  goToSquare('A', 1);
+  goToSquare('h', 8);
   while(true);
 }
 
@@ -270,6 +270,7 @@ void goHome() {
   }
   moveCount = 0;
   rotateX90(false);
+  delay(300);
 }
 
 
@@ -368,9 +369,9 @@ void rotateX90(bool clockwise) {
   delay(1);
   for (int i = 0; i < X_ROTATE_STEPS; i++) {
     digitalWrite(X_STEP, HIGH);
-    delayMicroseconds(3000);
+    delayMicroseconds(10000);
     digitalWrite(X_STEP, LOW);
-    delayMicroseconds(3000);
+    delayMicroseconds(10000);
   }
 }
 
@@ -382,11 +383,11 @@ void goToA1() {
   rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
   stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
   delay(500);
-  rememberMove(X_DIR, X_STEP, 125, true);
-  stepMotor(X_DIR, X_STEP, 125, true);
+  rememberMove(X_DIR, X_STEP, 120, true);
+  stepMotor(X_DIR, X_STEP, 120, true);
   delay(500);
-  rememberMove(Z_DIR, Z_STEP, 15, true);
-  stepMotor(Z_DIR, Z_STEP, 15, true);
+  rememberMove(Z_DIR, Z_STEP, 20, true);
+  stepMotor(Z_DIR, Z_STEP, 20, true);
   delay(500);
   rememberMove(Z_DIR, Z_STEP, false,
                 Y_DIR, Y_STEP, true,
@@ -405,77 +406,2368 @@ void goToA1() {
                 Y_DIR, Y_STEP, true,
                 30);
   delay(500);
-  delay(2000);
   setGripper(GRIPPER_CLOSED);
   goHome();
 }
-void goToA2() { /* TODO */ }
-void goToA3() { /* TODO */ }
-void goToA4() { /* TODO */ }
-void goToA5() { /* TODO */ }
-void goToA6() { /* TODO */ }
-void goToA7() { /* TODO */ }
-void goToA8() { /* TODO */ }
+void goToA2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 104  , true);
+  stepMotor(X_DIR, X_STEP, 104, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 35, true);
+  stepMotor(Z_DIR, Z_STEP, 35, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                107);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                107);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToA3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 91, true);
+  stepMotor(X_DIR, X_STEP, 91, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 55, true);
+  stepMotor(Z_DIR, Z_STEP, 55, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                107);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                107);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                20);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                20);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToA4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 79, true);
+  stepMotor(X_DIR, X_STEP, 79, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 75, true);
+  stepMotor(Z_DIR, Z_STEP, 75, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                115);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                115);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 10, false);
+  stepMotor(Z_DIR, Z_STEP, 10, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToA5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 71, true);
+  stepMotor(X_DIR, X_STEP, 71, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 40, true);
+  stepMotor(Z_DIR, Z_STEP, 40, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToA6() {
+    rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 70, true);
+  stepMotor(X_DIR, X_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 60, true);
+  stepMotor(Z_DIR, Z_STEP, 60, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                40);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                40);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToA7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 65, true);
+  stepMotor(X_DIR, X_STEP, 65, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 95, true);
+  stepMotor(Z_DIR, Z_STEP, 95, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                55);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToA8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 58, true);
+  stepMotor(X_DIR, X_STEP, 58, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                33);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                33);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                60);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                60);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
 
-void goToB1() { /* TODO */ }
-void goToB2() { /* TODO */ }
-void goToB3() { /* TODO */ }
-void goToB4() { /* TODO */ }
-void goToB5() { /* TODO */ }
-void goToB6() { /* TODO */ }
-void goToB7() { /* TODO */ }
-void goToB8() { /* TODO */ }
+void goToB1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 94, true);
+  stepMotor(X_DIR, X_STEP, 94, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 30, true);
+  stepMotor(Z_DIR, Z_STEP, 30, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 40, false);
+  stepMotor(Z_DIR, Z_STEP, 40, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToB2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 80, true);
+  stepMotor(X_DIR, X_STEP, 80, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 30, true);
+  stepMotor(Z_DIR, Z_STEP, 30, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                45);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                45);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToB3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 66, true);
+  stepMotor(X_DIR, X_STEP, 66, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToB4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 57, true);
+  stepMotor(X_DIR, X_STEP, 57, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                105);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                105);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToB5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 58, true);
+  stepMotor(X_DIR, X_STEP, 58, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 30, true);
+  stepMotor(Z_DIR, Z_STEP, 30, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                27);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                27);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToB6() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 53, true);
+  stepMotor(X_DIR, X_STEP, 53, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 90, true);
+  stepMotor(Z_DIR, Z_STEP, 90, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 40, true);
+  stepMotor(Z_DIR, Z_STEP, 40, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToB7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 44, true);
+  stepMotor(X_DIR, X_STEP, 44, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 60, true);
+  stepMotor(Z_DIR, Z_STEP, 60, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                80);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                80);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 10, false);
+  stepMotor(Z_DIR, Z_STEP, 10, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                15);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                15);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToB8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 42, true);
+  stepMotor(X_DIR, X_STEP, 42, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 10, false);
+  stepMotor(Z_DIR, Z_STEP, 10, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
 
-void goToC1() { /* TODO */ }
-void goToC2() { /* TODO */ }
-void goToC3() { /* TODO */ }
-void goToC4() { /* TODO */ }
-void goToC5() { /* TODO */ }
-void goToC6() { /* TODO */ }
-void goToC7() { /* TODO */ }
-void goToC8() { /* TODO */ }
+void goToC1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 70, true);
+  stepMotor(X_DIR, X_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 35, false);
+  stepMotor(Z_DIR, Z_STEP, 35, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToC2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 55, true);
+  stepMotor(X_DIR, X_STEP, 55, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 25, true);
+  stepMotor(Z_DIR, Z_STEP, 25, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                85);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                85);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 30, false);
+  stepMotor(Z_DIR, Z_STEP, 30, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                40);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                40);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToC3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 43, true);
+  stepMotor(X_DIR, X_STEP, 43, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 45, true);
+  stepMotor(Z_DIR, Z_STEP, 45, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                100);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                100);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 22, false);
+  stepMotor(Z_DIR, Z_STEP, 22, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                20);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                20);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToC4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 38, true);
+  stepMotor(X_DIR, X_STEP, 38, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 65, true);
+  stepMotor(Z_DIR, Z_STEP, 65, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                115);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                115);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 10, false);
+  stepMotor(Z_DIR, Z_STEP, 10, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToC5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 35, true);
+  stepMotor(X_DIR, X_STEP, 35, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 12, true);
+  stepMotor(Z_DIR, Z_STEP, 12, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                20);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                20);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToC6() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 32, true);
+  stepMotor(X_DIR, X_STEP, 32, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 8, false);
+  stepMotor(Z_DIR, Z_STEP, 8, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                50);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToC7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 30, true);
+  stepMotor(X_DIR, X_STEP, 30, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 90, true);
+  stepMotor(Z_DIR, Z_STEP, 90, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 10, false);
+  stepMotor(Z_DIR, Z_STEP, 10, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToC8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 30, true);
+  stepMotor(X_DIR, X_STEP, 30, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                80);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                80);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 30, true);
+  stepMotor(Z_DIR, Z_STEP, 30, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                30);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                10);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
 
-void goToD1() { /* TODO */ }
-void goToD2() { /* TODO */ }
-void goToD3() { /* TODO */ }
-void goToD4() { /* TODO */ }
-void goToD5() { /* TODO */ }
-void goToD6() { /* TODO */ }
-void goToD7() { /* TODO */ }
-void goToD8() { /* TODO */ }
+void goToD1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 35, true);
+  stepMotor(X_DIR, X_STEP, 35, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                60);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                60);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 45, false);
+  stepMotor(Z_DIR, Z_STEP, 45, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToD2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 22, true);
+  stepMotor(X_DIR, X_STEP, 22, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 20, true);
+  stepMotor(Z_DIR, Z_STEP, 20, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                70);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 35, false);
+  stepMotor(Z_DIR, Z_STEP, 35, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                55);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToD3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 18, true);
+  stepMotor(X_DIR, X_STEP, 18, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 40, true);
+  stepMotor(Z_DIR, Z_STEP, 40, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                90);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 20, false);
+  stepMotor(Z_DIR, Z_STEP, 20, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToD4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
 
-void goToE1() { /* TODO */ }
-void goToE2() { /* TODO */ }
-void goToE3() { /* TODO */ }
-void goToE4() { /* TODO */ }
-void goToE5() { /* TODO */ }
-void goToE6() { /* TODO */ }
-void goToE7() { /* TODO */ }
-void goToE8() { /* TODO */ }
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
 
-void goToF1() { /* TODO */ }
-void goToF2() { /* TODO */ }
-void goToF3() { /* TODO */ }
-void goToF4() { /* TODO */ }
-void goToF5() { /* TODO */ }
-void goToF6() { /* TODO */ }
-void goToF7() { /* TODO */ }
-void goToF8() { /* TODO */ }
+  rememberMove(X_DIR, X_STEP, 15, true);
+  stepMotor(X_DIR, X_STEP, 15, true);
+  delay(500);
 
-void goToG1() { /* TODO */ }
-void goToG2() { /* TODO */ }
-void goToG3() { /* TODO */ }
-void goToG4() { /* TODO */ }
-void goToG5() { /* TODO */ }
-void goToG6() { /* TODO */ }
-void goToG7() { /* TODO */ }
-void goToG8() { /* TODO */ }
+  rememberMove(Z_DIR, Z_STEP, 60, true);
+  stepMotor(Z_DIR, Z_STEP, 60, true);
+  delay(500);
 
-void goToH1() { /* TODO */ }
-void goToH2() { /* TODO */ }
-void goToH3() { /* TODO */ }
-void goToH4() { /* TODO */ }
-void goToH5() { /* TODO */ }
-void goToH6() { /* TODO */ }
-void goToH7() { /* TODO */ }
-void goToH8() { /* TODO */ }
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               110);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               110);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 18, false);
+  stepMotor(Z_DIR, Z_STEP, 18, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               30);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToD5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 16, true);
+  stepMotor(X_DIR, X_STEP, 16, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               28);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               28);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToD6() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 14, true);
+  stepMotor(X_DIR, X_STEP, 14, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 85, true);
+  stepMotor(Z_DIR, Z_STEP, 85, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 20, true);
+  stepMotor(Z_DIR, Z_STEP, 20, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToD7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 15, true);
+  stepMotor(X_DIR, X_STEP, 15, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 95, true);
+  stepMotor(Z_DIR, Z_STEP, 95, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 45, true);
+  stepMotor(Z_DIR, Z_STEP, 45, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToD8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 14, true);
+  stepMotor(X_DIR, X_STEP, 14, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               60);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               60);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+
+void goToE1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 20, false);
+  stepMotor(X_DIR, X_STEP, 20, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 45, false);
+  stepMotor(Z_DIR, Z_STEP, 45, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToE2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 15, false);
+  stepMotor(X_DIR, X_STEP, 15, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 20, true);
+  stepMotor(Z_DIR, Z_STEP, 20, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 35, false);
+  stepMotor(Z_DIR, Z_STEP, 35, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToE3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 10, false);
+  stepMotor(X_DIR, X_STEP, 10, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 35, true);
+  stepMotor(Z_DIR, Z_STEP, 35, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                85);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                85);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 20, false);
+  stepMotor(Z_DIR, Z_STEP, 20, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                45);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                45);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToE4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 5, false);
+  stepMotor(X_DIR, X_STEP, 5, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                105);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                105);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToE5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 65, true);
+  stepMotor(Z_DIR, Z_STEP, 65, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                115);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                115);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 15, true);
+  stepMotor(Z_DIR, Z_STEP, 15, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                33);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                33);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToE6() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 3, false);
+  stepMotor(X_DIR, X_STEP, 3, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 80, true);
+  stepMotor(Z_DIR, Z_STEP, 80, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                120);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                120);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 25, true);
+  stepMotor(Z_DIR, Z_STEP, 25, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                35);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToE7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 3, false);
+  stepMotor(X_DIR, X_STEP, 3, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 90, true);
+  stepMotor(Z_DIR, Z_STEP, 90, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 45, true);
+  stepMotor(Z_DIR, Z_STEP, 45, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                45);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                45);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToE8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 3, false);
+  stepMotor(X_DIR, X_STEP, 3, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 60, true);
+  stepMotor(Z_DIR, Z_STEP, 60, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                15);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                15);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 15, true);
+  stepMotor(Z_DIR, Z_STEP, 15, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                52);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+                Y_DIR, Y_STEP, true,
+                52);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+
+void goToF1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 55, false);
+  stepMotor(X_DIR, X_STEP, 55, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 30, false);
+  stepMotor(Z_DIR, Z_STEP, 30, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToF2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 45, false);
+  stepMotor(X_DIR, X_STEP, 45, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 25, true);
+  stepMotor(Z_DIR, Z_STEP, 25, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 35, false);
+  stepMotor(Z_DIR, Z_STEP, 35, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToF3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 33, false);
+  stepMotor(X_DIR, X_STEP, 33, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 45, true);
+  stepMotor(Z_DIR, Z_STEP, 45, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               85);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               85);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 20, false);
+  stepMotor(Z_DIR, Z_STEP, 20, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToF4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 25, false);
+  stepMotor(X_DIR, X_STEP, 25, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 60, true);
+  stepMotor(Z_DIR, Z_STEP, 60, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               100);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               100);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 15, false);
+  stepMotor(Z_DIR, Z_STEP, 15, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToF5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 22, false);
+  stepMotor(X_DIR, X_STEP, 22, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               115);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               115);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 12, true);
+  stepMotor(Z_DIR, Z_STEP, 12, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToF6() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 15, false);
+  stepMotor(X_DIR, X_STEP, 15, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 85, true);
+  stepMotor(Z_DIR, Z_STEP, 85, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 25, true);
+  stepMotor(Z_DIR, Z_STEP, 25, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToF7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 12, false);
+  stepMotor(X_DIR, X_STEP, 12, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 95, true);
+  stepMotor(Z_DIR, Z_STEP, 95, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               50);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               50);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToF8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 14, false);
+  stepMotor(X_DIR, X_STEP, 14, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               40);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               40);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 20, true);
+  stepMotor(Z_DIR, Z_STEP, 20, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               30);
+  delay(500);
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+
+void goToG1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 88, false);
+  stepMotor(X_DIR, X_STEP, 88, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 15, false);
+  stepMotor(Z_DIR, Z_STEP, 15, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               63);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               63);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToG2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 70, false);
+  stepMotor(X_DIR, X_STEP, 70, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 25, true);
+  stepMotor(Z_DIR, Z_STEP, 25, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 10, false);
+  stepMotor(Z_DIR, Z_STEP, 10, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToG3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+  rememberMove(X_DIR, X_STEP, 55, false);
+  stepMotor(X_DIR, X_STEP, 55, false);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 35, true);
+  stepMotor(Z_DIR, Z_STEP, 35, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, 3, true);
+  stepMotor(Z_DIR, Z_STEP, 3, true);
+  delay(500);
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToG4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 50, false);
+  stepMotor(X_DIR, X_STEP, 50, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               95);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               95);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 10, true);
+  stepMotor(Z_DIR, Z_STEP, 10, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               40);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               40);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToG5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 40, false);
+  stepMotor(X_DIR, X_STEP, 40, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 65, true);
+  stepMotor(Z_DIR, Z_STEP, 65, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               110);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               110);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 20, true);
+  stepMotor(Z_DIR, Z_STEP, 20, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToG6() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 36, false);
+  stepMotor(X_DIR, X_STEP, 36, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 80, true);
+  stepMotor(Z_DIR, Z_STEP, 80, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 35, true);
+  stepMotor(Z_DIR, Z_STEP, 35, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+
+void goToG7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 35, false);
+  stepMotor(X_DIR, X_STEP, 35, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 90, true);
+  stepMotor(Z_DIR, Z_STEP, 90, true);
+  delay(500);
+  
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               80);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               80);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 30, true);
+  stepMotor(Z_DIR, Z_STEP, 30, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 30, true);
+  stepMotor(Z_DIR, Z_STEP, 30, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               10);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               10);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToG8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 28, false);
+  stepMotor(X_DIR, X_STEP, 28, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 90, true);
+  stepMotor(Z_DIR, Z_STEP, 90, true);
+  delay(500);
+  
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               80);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               80);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               75);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               30);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               30);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+
+void goToH1() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 110, false);
+  stepMotor(X_DIR, X_STEP, 110, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               65);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 10, true);
+  stepMotor(Z_DIR, Z_STEP, 10, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               63);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               63);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToH2() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 90, false);
+  stepMotor(X_DIR, X_STEP, 90, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 25, true);
+  stepMotor(Z_DIR, Z_STEP, 25, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               70);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 5, true);
+  stepMotor(Z_DIR, Z_STEP, 5, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               55);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToH3() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 75, false);
+  stepMotor(X_DIR, X_STEP, 75, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 35, true);
+  stepMotor(Z_DIR, Z_STEP, 35, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               85);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               85);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 10, true);
+  stepMotor(Z_DIR, Z_STEP, 10, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToH4() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 60, false);
+  stepMotor(X_DIR, X_STEP, 60, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 50, true);
+  stepMotor(Z_DIR, Z_STEP, 50, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               95);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               95);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 25, true);
+  stepMotor(Z_DIR, Z_STEP, 25, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToH5() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 55, false);
+  stepMotor(X_DIR, X_STEP, 55, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 65, true);
+  stepMotor(Z_DIR, Z_STEP, 65, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               110);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               110);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 40, true);
+  stepMotor(Z_DIR, Z_STEP, 40, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToH6() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 45, false);
+  stepMotor(X_DIR, X_STEP, 45, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 80, true);
+  stepMotor(Z_DIR, Z_STEP, 80, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               120);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 45, true);
+  stepMotor(Z_DIR, Z_STEP, 45, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               35);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToH7() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 43, false);
+  stepMotor(X_DIR, X_STEP, 43, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 95, true);
+  stepMotor(Z_DIR, Z_STEP, 95, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 60, true);
+  stepMotor(Z_DIR, Z_STEP, 60, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               50);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               50);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
+void goToH8() {
+  rememberMove(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  stepMotor(Y_DIR, Y_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  stepMotor(Z_DIR, Z_STEP, STEPS_PER_REV, false);
+  delay(500);
+
+  rememberMove(X_DIR, X_STEP, 42, false);
+  stepMotor(X_DIR, X_STEP, 42, false);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 100, true);
+  stepMotor(Z_DIR, Z_STEP, 100, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               125);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 70, true);
+  stepMotor(Z_DIR, Z_STEP, 70, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               40);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               40);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, 35, true);
+  stepMotor(Z_DIR, Z_STEP, 35, true);
+  delay(500);
+
+  rememberMove(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  stepTwoMotors(Z_DIR, Z_STEP, false,
+               Y_DIR, Y_STEP, true,
+               45);
+  delay(500);
+
+  setGripper(GRIPPER_CLOSED);
+  goHome();
+}
