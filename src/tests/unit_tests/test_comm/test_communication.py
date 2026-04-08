@@ -1,5 +1,4 @@
-#import arduino.app_utils as app # should be the same as below
-from arduino import bridge # should be the same as above
+from arduino.app_utils import App, Bridge
 import time
 
 def setup():
@@ -8,7 +7,7 @@ def setup():
 
 def main():
     setup()
-    
+    app = App()
     app.bridge.call("fromC")  # call c function
 
 if __name__ == "__main__":
