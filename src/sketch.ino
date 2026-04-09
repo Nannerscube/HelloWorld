@@ -22,7 +22,6 @@
 #define GRIPPER_OPEN 1000
 #define MAX_MOVES 30
 
-#define STARTING_TIME 1800000UL
 const unsigned long DEBOUNCE_DELAY = 50;
 const unsigned long LONG_PRESS_TIME = 3000;
 const unsigned long STATUS_MESSAGE_MS = 3000;
@@ -33,13 +32,6 @@ bool setupComplete = false;
 String robotNextMove = "----";
 String statusMessage = "";
 unsigned long statusMessageUntil = 0;
-
-unsigned long playerStartTime = 0;
-unsigned long robotStartTime = 0;
-unsigned long playerElapsedTime = 0;
-unsigned long robotElapsedTime = 0;
-unsigned long playerPauseTime = 0;
-unsigned long robotPauseTime = 0;
 
 bool buttonOkState = false;
 bool buttonOkLastState = false;
@@ -112,51 +104,11 @@ bool buttonOkLongPress() {
   return false;
 }
 
-void pauseTimers() {
-  unsigned long now = millis();
-  if (robotTurn && robotStartTime > 0) {
-    robotPauseTime = now - robotStartTime;
-  } else if (!robotTurn && playerStartTime > 0) {
-    playerPauseTime = now - playerStartTime;
-  }
-}
-
-void resumeTimers() {
-  unsigned long now = millis();
-  if (robotTurn) {
-    robotStartTime = now - robotPauseTime;
-  } else {
-    playerStartTime = now - playerPauseTime;
-  }
-}
-
-unsigned long getPlayerTime() {
-  unsigned long elapsed;
-  if (gameActive && !robotTurn && playerStartTime > 0) elapsed = playerElapsedTime + (millis() - playerStartTime);
-  else elapsed = playerElapsedTime;
-  return (elapsed >= STARTING_TIME) ? 0 : STARTING_TIME - elapsed;
-}
-
-unsigned long getRobotTime() {
-  unsigned long elapsed;
-  if (gameActive && robotTurn && robotStartTime > 0) elapsed = robotElapsedTime + (millis() - robotStartTime);
-  else elapsed = robotElapsedTime;
-  return (elapsed >= STARTING_TIME) ? 0 : STARTING_TIME - elapsed;
-}
-
-void updateTimers() {
-}
-
 void toggleTurn() {
-  unsigned long now = millis();
   if (robotTurn) {
     robotTurn = false;
-    if (robotStartTime > 0) robotElapsedTime += (now - robotStartTime);
-    playerStartTime = now;
   } else {
     robotTurn = true;
-    if (playerStartTime > 0) playerElapsedTime += (now - playerStartTime);
-    robotStartTime = now;
   }
 }
 
@@ -174,7 +126,7 @@ void logUiState() {
 }
 
 bool goToPiecePlace() {
-  // Captured pieces are dropped at the home position in this merged version.
+  // Captured pieces are dropped at the home position
   // The square routines already return home after pickup, so there is no
   // additional travel needed here.
   return true;
@@ -189,6 +141,12 @@ bool parseSquare(const char* square, char& fileOut, int& rankOut) {
   fileOut = file;
   rankOut = rank;
   return true;
+}
+
+void retractArmToHome() {
+  initializePosition();
+  rotateX90(false);
+  setGripper(GRIPPER_CLOSED);
 }
 
 void performSquareAction(char file, int rank, unsigned int targetPulse) {
@@ -249,10 +207,6 @@ void startGame() {
   gameActive = true;
   setupComplete = true;
   robotTurn = true;
-  playerElapsedTime = 0;
-  robotElapsedTime = 0;
-  robotStartTime = millis();
-  playerStartTime = 0;
   robotNextMove = "----";
   statusMessage = "";
   Bridge.call("log_event", "Game started. Robot is White.");
@@ -298,18 +252,21 @@ void requestAndExecuteRobotMove() {
 void runSetupStep() {
   String data;
   if (!calibrationDone) {
+    retractArmToHome();
     bool success = callBridgeStep("camera_calibrate", data);
     setStatusMessage(shortenMessage(data));
     calibrationDone = success;
     return;
   }
   if (!verifyDone) {
+    retractArmToHome();
     bool success = callBridgeStep("camera_verify", data);
     setStatusMessage(shortenMessage(data));
     verifyDone = success;
     return;
   }
   if (!initialCaptureDone) {
+    retractArmToHome();
     bool success = callBridgeStep("camera_capture_initial", data);
     setStatusMessage(shortenMessage(data));
     initialCaptureDone = success;
@@ -323,6 +280,7 @@ void runSetupStep() {
 void handlePlayerTurn() {
   if (buttonOkPressed() && gameActive && !robotTurn) {
     Serial.println("[DEBUG] Player requested move capture");
+    retractArmToHome();
     String data;
     bool success = callBridgeStep("camera_capture_player_move", data);
     if (success) {
@@ -387,7 +345,6 @@ void loop() {
     endGame();
   }
 
-  updateTimers();
   logUiState();
   delay(50);
 }
