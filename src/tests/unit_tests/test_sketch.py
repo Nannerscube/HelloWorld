@@ -23,16 +23,26 @@ class TestSketchProtocolSource(unittest.TestCase):
         ):
             self.assertIn(command, self.sketch_source)
 
-    def test_setup_steps_retract_arm_before_camera_calls(self):
-        self.assertIn("retractArmToHome();\n    bool success = callBridgeStep(\"camera_calibrate\", data);", self.sketch_source)
-        self.assertIn("retractArmToHome();\n    bool success = callBridgeStep(\"camera_verify\", data);", self.sketch_source)
-        self.assertIn("retractArmToHome();\n    bool success = callBridgeStep(\"camera_capture_initial\", data);", self.sketch_source)
-        self.assertIn("retractArmToHome();\n    String data;\n    bool success = callBridgeStep(\"camera_capture_player_move\", data);", self.sketch_source)
+    def test_setup_homes_once_and_button_camera_homing_is_disabled(self):
+        self.assertIn("initializePosition();\n  rotateX90(false);", self.sketch_source)
+        self.assertIn("//retractArmToHome();\n    bool success = callBridgeStep(\"camera_calibrate\", data);", self.sketch_source)
+        self.assertIn("//retractArmToHome();\n    bool success = callBridgeStep(\"camera_verify\", data);", self.sketch_source)
+        self.assertIn("//retractArmToHome();\n    bool success = callBridgeStep(\"camera_capture_initial\", data);", self.sketch_source)
+        self.assertIn("//retractArmToHome();\n    String data;\n    bool success = callBridgeStep(\"camera_capture_player_move\", data);", self.sketch_source)
 
     def test_sketch_uses_single_button_game_flow(self):
-        self.assertIn("#define BUTTON_OK 10", self.sketch_source)
+        self.assertIn("BridgeClass Bridge(Serial1);", self.sketch_source)
+        self.assertIn("#define BUTTON_OK A0", self.sketch_source)
         self.assertIn("if (buttonOkPressed()) {", self.sketch_source)
-        self.assertIn("if (buttonOkLongPress() && gameActive)", self.sketch_source)
+        self.assertIn("buttonOkLongPress", self.sketch_source)
+        self.assertIn("Game resigned.", self.sketch_source)
+
+    def test_button_release_guard_is_present(self):
+        self.assertIn("bool buttonOkPressedLatch = false;", self.sketch_source)
+        self.assertIn("bool buttonOkReleaseRequired = false;", self.sketch_source)
+        self.assertIn("void requireButtonRelease()", self.sketch_source)
+        self.assertIn("if (!buttonOkReleaseRequired && buttonOkState", self.sketch_source)
+        self.assertIn("requireButtonRelease();\n  Bridge.call(\"log_event\", \"Game started. Robot is White.\");", self.sketch_source)
 
     def test_sketch_has_square_parsing_validation(self):
         self.assertIn("if (square == nullptr || strlen(square) < 2) return false;", self.sketch_source)

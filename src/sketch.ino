@@ -1,4 +1,5 @@
 ﻿#include <Arduino_RouterBridge.h>
+BridgeClass Bridge(Serial1);
 
 #define X_STEP 2
 #define X_DIR 5
@@ -7,7 +8,7 @@
 #define Z_STEP 4
 #define Z_DIR 7
 #define ENABLE 8
-#define BUTTON_OK 10
+#define BUTTON_OK A0
 #define Z_ENDSTOP 11
 #define GRIPPER_PIN 12
 
@@ -18,7 +19,7 @@
 #define Z_STEP_DELAY_MS 8000
 #define Z_EXTRA_STEPS 100
 #define X_ROTATE_STEPS 168
-#define GRIPPER_CLOSED 2200
+#define GRIPPER_CLOSED 2800
 #define GRIPPER_OPEN 1000
 #define MAX_MOVES 30
 
@@ -35,6 +36,8 @@ unsigned long statusMessageUntil = 0;
 
 bool buttonOkState = false;
 bool buttonOkLastState = false;
+bool buttonOkPressedLatch = false;
+bool buttonOkReleaseRequired = false;
 unsigned long buttonOkDebounceTime = 0;
 unsigned long buttonOkPressStart = 0;
 
@@ -87,21 +90,34 @@ void readButtons() {
 }
 
 bool buttonOkPressed() {
-  static bool lastState = false;
-  if (buttonOkState && !lastState) {
-    lastState = true;
+  if (buttonOkReleaseRequired) {
+    if (!buttonOkState) {
+      buttonOkReleaseRequired = false;
+      buttonOkPressedLatch = false;
+    }
+    return false;
+  }
+
+  if (buttonOkState && !buttonOkPressedLatch) {
+    buttonOkPressedLatch = true;
     return true;
   }
-  if (!buttonOkState) lastState = false;
+  if (!buttonOkState) buttonOkPressedLatch = false;
   return false;
 }
 
 bool buttonOkLongPress() {
-  if (buttonOkState && (millis() - buttonOkPressStart >= LONG_PRESS_TIME)) {
+  if (!buttonOkReleaseRequired && buttonOkState && (millis() - buttonOkPressStart >= LONG_PRESS_TIME)) {
     buttonOkPressStart = millis() + 10000;
     return true;
   }
   return false;
+}
+
+void requireButtonRelease() {
+  buttonOkReleaseRequired = true;
+  buttonOkPressedLatch = true;
+  buttonOkPressStart = millis();
 }
 
 void toggleTurn() {
@@ -209,6 +225,7 @@ void startGame() {
   robotTurn = true;
   robotNextMove = "----";
   statusMessage = "";
+  requireButtonRelease();
   Bridge.call("log_event", "Game started. Robot is White.");
   Serial.println("[GAME] Started");
 }
@@ -245,6 +262,7 @@ void requestAndExecuteRobotMove() {
     }
     Serial.println("[DEBUG] Reference refresh succeeded");
     toggleTurn();
+    requireButtonRelease();
     Bridge.call("log_event", "Robot move complete. Player turn.");
   }
 }
@@ -252,26 +270,30 @@ void requestAndExecuteRobotMove() {
 void runSetupStep() {
   String data;
   if (!calibrationDone) {
-    retractArmToHome();
+    //retractArmToHome();
     bool success = callBridgeStep("camera_calibrate", data);
     setStatusMessage(shortenMessage(data));
     calibrationDone = success;
+    requireButtonRelease();
     return;
   }
   if (!verifyDone) {
-    retractArmToHome();
+    //retractArmToHome();
     bool success = callBridgeStep("camera_verify", data);
     setStatusMessage(shortenMessage(data));
     verifyDone = success;
+    requireButtonRelease();
     return;
   }
   if (!initialCaptureDone) {
-    retractArmToHome();
+    //retractArmToHome();
     bool success = callBridgeStep("camera_capture_initial", data);
     setStatusMessage(shortenMessage(data));
     initialCaptureDone = success;
     if (success) {
       startGame();
+    } else {
+      requireButtonRelease();
     }
     return;
   }
@@ -280,7 +302,7 @@ void runSetupStep() {
 void handlePlayerTurn() {
   if (buttonOkPressed() && gameActive && !robotTurn) {
     Serial.println("[DEBUG] Player requested move capture");
-    retractArmToHome();
+    //retractArmToHome();
     String data;
     bool success = callBridgeStep("camera_capture_player_move", data);
     if (success) {
@@ -288,11 +310,13 @@ void handlePlayerTurn() {
       Serial.print("[DEBUG] Player move accepted: ");
       Serial.println(data);
       toggleTurn();
+      requireButtonRelease();
       Bridge.call("log_event", "Player move captured. Robot turn.");
     } else {
       Serial.print("[DEBUG] Player move capture failed: ");
       Serial.println(data);
       setStatusMessage(shortenMessage(data));
+      requireButtonRelease();
     }
   }
 }
@@ -528,9 +552,9 @@ void goHome() {
 
 void setGripper(unsigned int pulse) {
   for (unsigned char i = 0; i < 8; i++) {
-    digitalWrite(SERVO_PIN, HIGH);
+    digitalWrite(GRIPPER_PIN, HIGH);
     delayMicroseconds(pulse);
-    digitalWrite(SERVO_PIN, LOW);
+    digitalWrite(GRIPPER_PIN, LOW);
   }
 }
 

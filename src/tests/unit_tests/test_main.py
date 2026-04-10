@@ -132,11 +132,26 @@ class TestMainPy(unittest.TestCase):
     def test_format_result(self):
         self.assertEqual(self.main.format_result("success", "ok"), "success:ok")
 
-    def test_rotation_name_and_bottom_side_mapping(self):
+    def test_rotation_name_and_fixed_board_rotation(self):
         self.assertEqual(self.main.rotation_name(cv2.ROTATE_180), "rotate_180")
         self.assertEqual(self.main.rotation_name(None), "none")
-        self.assertEqual(self.main.get_rotation_for_bottom_side("left"), cv2.ROTATE_90_COUNTERCLOCKWISE)
-        self.assertEqual(self.main.get_rotation_for_bottom_side("bottom"), None)
+        self.assertEqual(self.main.BOARD_ROTATION, cv2.ROTATE_90_CLOCKWISE)
+
+    def test_board_corner_orientation_valid_for_green_white_board(self):
+        board_img = np.zeros((self.main.BOARD_SIZE, self.main.BOARD_SIZE, 3), dtype=np.uint8)
+        square_size = self.main.BOARD_SIZE // 8
+        board_img[7 * square_size:8 * square_size, 0:square_size] = (0, 120, 0)
+        board_img[7 * square_size:8 * square_size, 7 * square_size:8 * square_size] = (255, 255, 255)
+        valid, margin = self.main.board_corner_orientation_valid(board_img)
+        self.assertTrue(valid)
+        self.assertGreater(margin, self.main.BOARD_COLOR_MARGIN)
+
+    def test_choose_starting_rotation_uses_fixed_camera_rotation(self):
+        warped = np.zeros((self.main.BOARD_SIZE, self.main.BOARD_SIZE, 3), dtype=np.uint8)
+        name, rotation, source = self.main.choose_starting_rotation(None, warped)
+        self.assertEqual(name, "rotate_90_cw")
+        self.assertEqual(rotation, cv2.ROTATE_90_CLOCKWISE)
+        self.assertEqual(source, "fixed-board-rotation")
 
     def test_uci_to_piece_type_maps_starting_pieces(self):
         self.main.board = chess.Board()
