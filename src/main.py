@@ -40,14 +40,14 @@ CAPTURE_MOVE_SCORE_MIN = 1.15
 CAPTURE_TO_RATIO_FLOOR = 0.08
 CAPTURE_SOURCE_BONUS = 0.45
 QUIET_FROM_CAPTURE_SOURCE_PENALTY = 0.5
-BOARD_ROTATION = None
+BOARD_ROTATION = cv2.ROTATE_90_CLOCKWISE
+BOARD_COLOR_MARGIN = 18.0
 ROTATION_CANDIDATES = [
     ("none", None),
     ("rotate_90_cw", cv2.ROTATE_90_CLOCKWISE),
     ("rotate_180", cv2.ROTATE_180),
     ("rotate_90_ccw", cv2.ROTATE_90_COUNTERCLOCKWISE),
 ]
-RED_AREA_MIN = 500
 
 board = chess.Board()
 engine = None
@@ -202,6 +202,42 @@ def get_square_center_roi(gray_img, row, col, crop_ratio=0.45):
     return gray_img[y1:y2, x1:x2]
 
 
+def get_square_center_roi_color(bgr_img, row, col, crop_ratio=0.45):
+    square_size = BOARD_SIZE // 8
+    inset = int(square_size * (1 - crop_ratio) / 2)
+    y1 = row * square_size + inset
+    y2 = (row + 1) * square_size - inset
+    x1 = col * square_size + inset
+    x2 = (col + 1) * square_size - inset
+    return bgr_img[y1:y2, x1:x2]
+
+
+def square_white_score(bgr_roi):
+    if bgr_roi is None or bgr_roi.size == 0:
+        return 0.0
+    hsv = cv2.cvtColor(bgr_roi, cv2.COLOR_BGR2HSV)
+    saturation = float(np.mean(hsv[:, :, 1]))
+    value = float(np.mean(hsv[:, :, 2]))
+    return value - saturation
+
+
+def board_corner_orientation_valid(warped_bgr):
+    # In the internal board orientation, bottom-right must be a white square
+    # and bottom-left must be a green/dark square.
+    bottom_left = get_square_center_roi_color(warped_bgr, 7, 0, crop_ratio=0.55)
+    bottom_right = get_square_center_roi_color(warped_bgr, 7, 7, crop_ratio=0.55)
+    left_score = square_white_score(bottom_left)
+    right_score = square_white_score(bottom_right)
+    margin = right_score - left_score
+    debug_log(
+        "Board corner colour check: "
+        f"bottom_left_white_score={left_score:.2f}, "
+        f"bottom_right_white_score={right_score:.2f}, "
+        f"margin={margin:.2f}"
+    )
+    return margin >= BOARD_COLOR_MARGIN, margin
+
+
 def score_starting_rotation(warped_bgr):
     gray = cv2.cvtColor(warped_bgr, cv2.COLOR_BGR2GRAY)
 
@@ -289,88 +325,11 @@ def rotation_name(rotation):
     return "unknown"
 
 
-def get_red_anchor_side(raw_bgr):
-    if raw_bgr is None or locked_outer_pts is None:
-        return None, None
-
-    hsv = cv2.cvtColor(raw_bgr, cv2.COLOR_BGR2HSV)
-    lower_red_1 = np.array([0, 70, 50], dtype=np.uint8)
-    upper_red_1 = np.array([10, 255, 255], dtype=np.uint8)
-    lower_red_2 = np.array([170, 70, 50], dtype=np.uint8)
-    upper_red_2 = np.array([180, 255, 255], dtype=np.uint8)
-
-    mask1 = cv2.inRange(hsv, lower_red_1, upper_red_1)
-    mask2 = cv2.inRange(hsv, lower_red_2, upper_red_2)
-    mask = cv2.bitwise_or(mask1, mask2)
-    kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    best_contour = None
-    best_area = 0.0
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > best_area:
-            best_area = area
-            best_contour = contour
-
-    if best_contour is None or best_area < RED_AREA_MIN:
-        return None, None
-
-    moments = cv2.moments(best_contour)
-    if moments["m00"] == 0:
-        return None, None
-
-    cx = moments["m10"] / moments["m00"]
-    cy = moments["m01"] / moments["m00"]
-    anchor = np.array([cx, cy], dtype=np.float32)
-
-    side_midpoints = {
-        "top": (locked_outer_pts[0] + locked_outer_pts[1]) / 2.0,
-        "right": (locked_outer_pts[1] + locked_outer_pts[2]) / 2.0,
-        "bottom": (locked_outer_pts[2] + locked_outer_pts[3]) / 2.0,
-        "left": (locked_outer_pts[3] + locked_outer_pts[0]) / 2.0,
-    }
-
-    side_distances = {
-        side: float(np.linalg.norm(anchor - midpoint))
-        for side, midpoint in side_midpoints.items()
-    }
-    detected_side = min(side_distances, key=side_distances.get)
-    return detected_side, {
-        "area": round(best_area, 1),
-        "cx": round(float(cx), 1),
-        "cy": round(float(cy), 1),
-        "distances": {side: round(dist, 1) for side, dist in side_distances.items()},
-    }
-
-
-def get_rotation_for_bottom_side(side_name):
-    return {
-        "bottom": None,
-        "top": cv2.ROTATE_180,
-        "left": cv2.ROTATE_90_COUNTERCLOCKWISE,
-        "right": cv2.ROTATE_90_CLOCKWISE,
-    }.get(side_name)
-
-
 def choose_starting_rotation(raw_bgr, warped_bgr):
-    red_side, red_metrics = get_red_anchor_side(raw_bgr)
-    if red_side is not None:
-        chosen_rotation = get_rotation_for_bottom_side(red_side)
-        debug_log(
-            "Red anchor probe: "
-            f"side={red_side}, area={red_metrics['area']}, center=({red_metrics['cx']}, {red_metrics['cy']}), "
-            f"distances={red_metrics['distances']}"
-        )
-        return rotation_name(chosen_rotation), chosen_rotation, "red-anchor"
-
-    best_name, best_rotation, best_score = detect_starting_rotation(warped_bgr)
     debug_log(
-        f"Red anchor unavailable; falling back to board heuristic rotation {best_name} (score={best_score:.3f})."
+        f"Using fixed board rotation {rotation_name(BOARD_ROTATION)} "
     )
-    return best_name, best_rotation, "board-heuristic"
+    return rotation_name(BOARD_ROTATION), BOARD_ROTATION, "fixed-board-rotation"
 
 
 def capture_stable_median(matrix):
