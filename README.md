@@ -59,8 +59,6 @@ opencv-python
 
 ## Configuration
 
-See [wiring schematic](https://github.com/Nannerscube/HelloWorld) for full pin mapping. Key pins:
-
 - `ENABLE_PIN = 8`
 - Endstops and motor step/dir pins are defined in `sketch.ino`
 
