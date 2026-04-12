@@ -36,7 +36,6 @@ Total hardware cost: ~€203 + 3D printing
 
 **Arduino:**
 - `Arduino_RouterBridge`
-- `AccelStepper`
 
 **Python (`requirements.txt`):**
 ```
