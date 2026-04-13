@@ -10,7 +10,7 @@ from arduino.app_utils import App, Bridge
 
 print("main.py started")
 
-SKILL_LEVEL = 10
+SKILL_LEVEL = 20
 ENGINE_PATH_CANDIDATES = [
     os.environ.get("STOCKFISH_PATH", ""),
     "/usr/games/stockfish",
@@ -368,7 +368,7 @@ def capture_stable_median(matrix):
 
 
 def try_find_corners(gray):
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(16, 16))
     eq = clahe.apply(gray)
     eq_blur = cv2.GaussianBlur(eq, (5, 5), 0)
     norm = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
