@@ -75,7 +75,7 @@ opencv-python
 10. Press **OK** again to capture the initial board state — the game begins
 11. **Your turn:** make a legal move and press **OK** so the camera captures it
 12. **Robot's turn:** wait for the arm to finish and the reference image to refresh before touching the board
-13. To stop the game, hold **OK** for ~3 seconds to trigger the resignation flow
+13. To stop the game, hold **OK** for ~10 seconds to trigger the resignation flow
 
 ## Known Limitations
 
